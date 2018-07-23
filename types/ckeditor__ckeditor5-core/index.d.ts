@@ -38,10 +38,11 @@ declare module '@ckeditor/ckeditor5-core/src/editor/editor' {
   import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
 
   export class Editor extends ObservableMixin {
-    static build: {
-      plugins: any[];
-      config: object;
-    };
+    static builtinPlugins: any[];
+    static defaultConfig: object;
+
+    static create(element: Element, config: object): Promise<any>;
+
     readonly commands: CommandCollection;
     readonly config: Config;
     readonly conversion: Conversion;
@@ -52,6 +53,7 @@ declare module '@ckeditor/ckeditor5-core/src/editor/editor' {
     locale: Locale;
     model: Model;
     plugins: PluginCollection;
+    state: 'initializing' | 'ready' | 'destroyed';
 
     constructor(config: object);
 
@@ -86,6 +88,7 @@ declare module '@ckeditor/ckeditor5-core/src/editor/editorwithui' {
   import { EditorUI } from '@ckeditor/ckeditor5-core/src/editor/editorui';
 
   export interface EditorWithUI extends Editor {
+    readonly element: HTMLElement;
     readonly ui: EditorUI;
   }
 }
