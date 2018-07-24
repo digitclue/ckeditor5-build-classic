@@ -25,6 +25,13 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/conversion' {
   export default Conversion;
 }
 
+declare module '@ckeditor/ckeditor5-engine/src/model/writer' {
+  export class Writer {
+  }
+
+  export default Writer;
+}
+
 declare module '@ckeditor/ckeditor5-engine/src/model/delta/delta' {
   export class Delta {
   }
@@ -33,7 +40,44 @@ declare module '@ckeditor/ckeditor5-engine/src/model/delta/delta' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/node' {
+  import Document from '@ckeditor/ckeditor5-engine/src/model/document';
+  import DocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment';
+  import Element from '@ckeditor/ckeditor5-engine/src/model/element';
+
   export class Node {
+    readonly document: Document;
+    readonly endOffset: number;
+    readonly index: number;
+    readonly nextSibling: Node;
+    readonly offsetSize: number;
+    readonly parent: Element | DocumentFragment;
+    readonly previousSibling: Node;
+    readonly root: Node;
+    readonly startOffset: number;
+
+    constructor(attrs?: object);
+
+    getAncestors(options?: { includeSelf: boolean, parentFirst: boolean }): any[];
+
+    getAttribute(key: string): any;
+
+    getAttributeKeys(): Iterator<string>;
+
+    getAttributes(): Iterator<any>;
+
+    getCommonAncestor(node: Node, options?: { includeSelf: boolean }): Element | DocumentFragment;
+
+    getPath(): number[];
+
+    hasAttribute(key: string): boolean;
+
+    is(type: 'element' | 'rootElement' | 'text' | 'textProxy' | 'documentFragment'): boolean;
+
+    isAfter(node: Node): boolean;
+
+    isBefore(node: Node): boolean;
+
+    toJSON(): object;
   }
 
   export default Node;
@@ -57,7 +101,31 @@ declare module '@ckeditor/ckeditor5-engine/src/model/item' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/element' {
-  export class Element {
+  import Node from '@ckeditor/ckeditor5-engine/src/model/node';
+
+  export class Element extends Node {
+    readonly childCount: number;
+    readonly isEmpty: boolean;
+    readonly maxOffset: number;
+    readonly name: string;
+
+    static fromJSON(json: object): Element;
+
+    getChild(index: number): Node;
+
+    getChildIndex(node: Node): number;
+
+    getChildStartOffset(node: Node): number;
+
+    getChildren(): Iterator<Node>;
+
+    getNodeByPath(relativePath: number[]): Node;
+
+    is(type: string, name?: string): boolean;
+
+    offsetToIndex(offset: number): number;
+
+    toJSON(): object;
   }
 
   export default Element;
@@ -71,7 +139,97 @@ declare module '@ckeditor/ckeditor5-engine/src/model/documentfragment' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/schema' {
-  export class Schema {
+  import DocumentSelection from '@ckeditor/ckeditor5-engine/src/model/documentselection';
+  import Element from '@ckeditor/ckeditor5-engine/src/model/element';
+  import Item from '@ckeditor/ckeditor5-engine/src/model/item';
+  import Node from '@ckeditor/ckeditor5-engine/src/model/node';
+  import Position from '@ckeditor/ckeditor5-engine/src/model/position';
+  import Range from '@ckeditor/ckeditor5-engine/src/model/range';
+  import Selection from '@ckeditor/ckeditor5-engine/src/model/selection';
+  import Writer from '@ckeditor/ckeditor5-engine/src/model/writer';
+  import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
+
+  export interface SchemaItemDefinition {
+    allowIn?: string | string[];
+    allowAttributes?: string | string[];
+    allowContentOf?: string | string[];
+    allowWhere?: string | string[];
+    allowAttributesOf?: string | string[];
+    inheritTypesFrom?: string | string[];
+    inheritAllFrom?: string;
+    isBlock?: boolean;
+    isLimit?: boolean;
+    isObject?: boolean;
+  }
+
+  export interface SchemaCompiledItemDefinition {
+    name: string;
+    isBlock: boolean;
+    isLimit: boolean;
+    isObject: boolean;
+    allowIn: string[];
+    allowAttributes: string[];
+  }
+
+  export interface SchemaContextItem {
+    name: string;
+
+    getAttributeKeys(): Iterator<string>;
+
+    getAttribute(keyName: string): any;
+  }
+
+  export type SchemaContextDefinition =
+    Node
+    | Position
+    | SchemaContext
+    | string
+    | Array<string | Node>;
+
+  export class SchemaContext {
+
+  }
+
+  export class Schema extends ObservableMixin {
+    constructor();
+
+    addAttributeCheck(callback: (context: SchemaContext, attributeName: string) => boolean): void;
+
+    addChildCheck(callback: (context: SchemaContext, childDefinition: SchemaCompiledItemDefinition) => boolean): void;
+
+    checkAttribute(context: SchemaContextDefinition, attributeName: string): boolean;
+
+    checkAttributeInSelection(selection: Selection | DocumentSelection, attribute: string): boolean;
+
+    checkChild(context: SchemaContextDefinition, def: Node | string): boolean;
+
+    checkMerge(positionOrBaseElement: Position | Element, elementToMerge: Element): boolean;
+
+    extend(itemName: string, definition: SchemaItemDefinition): void;
+
+    findAllowedParent(): Element;
+
+    getDefinition(item: Item | SchemaContextItem | string): SchemaCompiledItemDefinition;
+
+    getDefinitions(): { [key: string]: SchemaCompiledItemDefinition };
+
+    getLimitElement(selectionOrRangeOrPosition: Selection | DocumentSelection | Range | Position): Element;
+
+    getNearestSelectionRange(position: Position, direction?: 'both' | 'forward' | 'backward'): Range;
+
+    getValidRanges(ranges: Range[], attribute: string): Range[];
+
+    isBlock(item: Item | SchemaContextItem | string): boolean;
+
+    isLimit(item: Item | SchemaContextItem | string): boolean;
+
+    isObject(item: Item | SchemaContextItem | string): boolean;
+
+    isRegistered(item: Item | SchemaContextItem | string): boolean;
+
+    register(itemName: string, definition: SchemaItemDefinition): void;
+
+    removeDisallowedAttributes(nodes: Iterator<Node>, writer: Writer): void;
   }
 
   export default Schema;
@@ -92,7 +250,47 @@ declare module '@ckeditor/ckeditor5-engine/src/model/selection' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/documentselection' {
+  import Document from '@ckeditor/ckeditor5-engine/src/model/document';
+  import Element from '@ckeditor/ckeditor5-engine/src/model/element';
+  import Position from '@ckeditor/ckeditor5-engine/src/model/position';
+  import Range from '@ckeditor/ckeditor5-engine/src/model/range';
+
   export class DocumentSelection {
+    readonly anchor: Position;
+    readonly focus: Position;
+    readonly hasOwnRange: boolean;
+    readonly isBackward: boolean;
+    readonly isCollapsed: boolean;
+    readonly isGravityOverridden: boolean;
+    readonly rangeCount: number;
+
+    constructor(doc: Document);
+
+    containsEntireContent(element?: Element): boolean;
+
+    destroy(): void;
+
+    getAttribute(key: string): any[];
+
+    getAttributeKeys(): Iterator<string>;
+
+    getAttributes(): Iterator<any>;
+
+    getFirstPosition(): Position;
+
+    getFirstRange(): Range;
+
+    getLastPosition(): Position;
+
+    getLastRange(): Range;
+
+    getRanges(): Iterator<Range>;
+
+    getSelectedBlocks(): Iterator<Element>;
+
+    getSelectedElement(): Element;
+
+    hasAttribute(key: string): boolean;
   }
 
   export default DocumentSelection;

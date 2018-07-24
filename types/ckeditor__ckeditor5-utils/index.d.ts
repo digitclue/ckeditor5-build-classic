@@ -14,6 +14,12 @@ declare module '@ckeditor/ckeditor5-utils/src/dom/position' {
   }
 }
 
+declare module '@ckeditor/ckeditor5-utils/src/first' {
+  export function first<T>(iterable: Iterator<T>): T;
+
+  export default first;
+}
+
 declare module '@ckeditor/ckeditor5-utils/src/focustracker' {
   export class FocusTracker {
   }

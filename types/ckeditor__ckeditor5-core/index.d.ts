@@ -18,8 +18,47 @@ declare module '@ckeditor/ckeditor5-core/src/editingkeystrokehandler' {
   export default EditingKeystrokeHandler;
 }
 
+declare module '@ckeditor/ckeditor5-core/src/command' {
+  import Editor from '@ckeditor/ckeditor5-core/src/editor/editor';
+  import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
+
+  export class Command extends ObservableMixin {
+    readonly editor: Editor;
+    isEnabled: boolean;
+    value: any;
+
+    constructor(editor: Editor);
+
+    destroy(): void;
+
+    execute(...args: any[]): void;
+
+    refresh(): void;
+
+  }
+
+  export default Command;
+}
+
 declare module '@ckeditor/ckeditor5-core/src/commandcollection' {
+  import Command from '@ckeditor/ckeditor5-core/src/command';
+
   export class CommandCollection {
+    constructor();
+
+    [Symbol.iterator](): Iterator<[string, Command]>;
+
+    add(commandName: string, command: Command);
+
+    commands(): Iterator<Command>;
+
+    destroy();
+
+    execute(commandName: string): void;
+
+    get(commandName: string): Command;
+
+    names(): Iterator<string>;
   }
 
   export default CommandCollection;
