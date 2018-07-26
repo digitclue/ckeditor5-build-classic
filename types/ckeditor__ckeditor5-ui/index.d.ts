@@ -4,6 +4,42 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.3
 
+declare module '@ckeditor/ckeditor5-ui/src/focuscycler' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
+  import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
+  import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
+
+  export class FocusCycler {
+    readonly actions: { [action: string]: string | string[] };
+    readonly current: number;
+    readonly first: View;
+    readonly focusTracker: FocusTracker;
+    readonly focusables: ViewCollection;
+    readonly keystrokeHandler: KeystrokeHandler;
+    readonly last: View;
+    readonly next: View;
+    readonly previous: View;
+
+    constructor(options: {
+      focusables: ViewCollection,
+      focusTracker: FocusTracker,
+      keystrokeHandler?: KeystrokeHandler,
+      actions?: { [action: string]: string | string[] },
+    });
+
+    focusFirst(): void;
+
+    focusLast(): void;
+
+    focusNext(): void;
+
+    focusPrevious(): void;
+  }
+
+  export default FocusCycler;
+}
+
 declare module '@ckeditor/ckeditor5-ui/src/componentfactory' {
   import { EditorWithUI } from '@ckeditor/ckeditor5-core/src/editor/editorwithui';
   import View from '@ckeditor/ckeditor5-ui/src/view';
@@ -34,7 +70,7 @@ declare module '@ckeditor/ckeditor5-ui/src/viewcollection' {
   export class ViewCollection extends Collection<View> {
     locale: Locale;
 
-    constructor(locale: Locale);
+    constructor(locale?: Locale);
 
     destroy(): void;
   }
@@ -104,9 +140,9 @@ declare module '@ckeditor/ckeditor5-ui/src/template' {
 
   export interface TemplateDefinition {
     attributes?: { [key: string]: TemplateValueSchema };
-    children?: Array<TemplateDefinition | string | Node>;
+    children?: Array<Template | TemplateDefinition | View | string | Node>;
     on?: { [event: string]: TemplateListenerSchema };
-    tag: string;
+    tag?: string;
     text?: string | TemplateValueSchema | Array<string | TemplateValueSchema>;
   }
 
@@ -121,6 +157,14 @@ declare module '@ckeditor/ckeditor5-ui/src/template' {
     | any[];
 
   export default Template;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/bindings/submithandler' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+
+  export function submitHandler(options?: { view: View })
+
+  export default submitHandler;
 }
 
 declare module '@ckeditor/ckeditor5-ui/src/bindings/clickoutsidehandler' {
@@ -228,6 +272,7 @@ declare module '@ckeditor/ckeditor5-ui/src/button/buttonview' {
 }
 
 declare module '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview' {
+  import Position from '@ckeditor/ckeditor5-engine/src/model/position';
   import View from '@ckeditor/ckeditor5-ui/src/view';
   import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
   import { Options } from '@ckeditor/ckeditor5-utils/src/dom/position';
@@ -235,7 +280,53 @@ declare module '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview' {
   export class BalloonPanelView extends View {
     static arrowHorizontalOffset: number;
     static arrowVerticalOffset: number;
-    static defaultPositions: object;
+    static defaultPositions: {
+      northArrowSouth: (targetRect, balloonRect) => Position,
+
+      northArrowSouthEast: (targetRect, balloonRect) => Position,
+
+      northArrowSouthWest: (targetRect, balloonRect) => Position,
+
+      // ------- North west
+
+      northWestArrowSouth: (targetRect, balloonRect) => Position,
+
+      northWestArrowSouthWest: (targetRect, balloonRect) => Position,
+
+      northWestArrowSouthEast: (targetRect, balloonRect) => Position,
+
+      // ------- North east
+
+      northEastArrowSouth: (targetRect, balloonRect) => Position,
+
+      northEastArrowSouthEast: (targetRect, balloonRect) => Position,
+
+      northEastArrowSouthWest: (targetRect, balloonRect) => Position,
+
+      // ------- South
+
+      southArrowNorth: (targetRect, balloonRect) => Position,
+
+      southArrowNorthEast: (targetRect, balloonRect) => Position,
+
+      southArrowNorthWest: (targetRect, balloonRect) => Position,
+
+      // ------- South west
+
+      southWestArrowNorth: (targetRect, balloonRect) => Position,
+
+      southWestArrowNorthWest: (targetRect, balloonRect) => Position,
+
+      southWestArrowNorthEast: (targetRect, balloonRect) => Position,
+
+      // ------- South east
+
+      southEastArrowNorth: (targetRect, balloonRect) => Position,
+
+      southEastArrowNorthEast: (targetRect, balloonRect) => Position,
+
+      southEastArrowNorthWest: (targetRect, balloonRect) => Position,
+    };
     readonly content: ViewCollection;
     className: string;
     isVisible: boolean;
@@ -258,6 +349,34 @@ declare module '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview' {
   export default BalloonPanelView;
 }
 
+declare module '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon' {
+  import { EditorWithUI } from '@ckeditor/ckeditor5-core/src/editor/editorwithui';
+  import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+  import BalloonPanelView from '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview';
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import { Options } from '@ckeditor/ckeditor5-utils/src/dom/position';
+
+  export class ContextualBalloon extends Plugin<EditorWithUI> {
+    readonly view: BalloonPanelView;
+    positionLimiter: HTMLElement | Range | ClientRect | DOMRect | (() => any);
+    visibleView: View;
+
+    add(data: {
+      view?: View,
+      position?: Options,
+      balloonClassName?: string,
+    }): void;
+
+    hasView(view: View): boolean;
+
+    remove(view: View): void;
+
+    updatePosition(position?: Options): void;
+  }
+
+  export default ContextualBalloon;
+}
+
 declare module '@ckeditor/ckeditor5-ui/src/editorui/editoruiview' {
   import View from '@ckeditor/ckeditor5-ui/src/view';
   import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
@@ -267,4 +386,57 @@ declare module '@ckeditor/ckeditor5-ui/src/editorui/editoruiview' {
   }
 
   export default EditorUIView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/labeledinput/labeledinputview' {
+  import LabelView from '@ckeditor/ckeditor5-ui/src/label/labelview';
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
+
+  export class LabeledInputView<T = View> extends View {
+    inputView: T;
+    isReadOnly: boolean;
+    label: string;
+    labelView: LabelView;
+    value: string;
+
+    constructor(locale: Locale, InputView: View['constructor']);
+
+    focus(): void;
+
+    select(): void;
+  }
+
+  export default LabeledInputView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/label/labelview' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+
+  export class LabelView extends View {
+    for: string;
+    text: string;
+  }
+
+  export default LabelView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/inputtext/inputtextview' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
+
+  export class InputTextView extends View {
+    id: string;
+    isReadOnly: boolean;
+    placeholder: string;
+    value: string;
+
+    constructor(locale: Locale);
+
+    focus(): void;
+
+    select(): void;
+  }
+
+  export default InputTextView;
 }

@@ -5,11 +5,13 @@
 // TypeScript Version: 2.3
 
 declare module '@ckeditor/ckeditor5-utils/src/dom/position' {
+  import Position from '@ckeditor/ckeditor5-engine/src/model/position';
+
   export interface Options {
     element?: HTMLElement;
     fitInViewport?: boolean;
     limiter?: HTMLElement | Range | ClientRect | DOMRect | (() => any);
-    positions?: () => any;
+    positions?: Array<(...args) => Position>;
     target?: HTMLElement | Range | ClientRect | DOMRect | (() => any);
   }
 }
@@ -20,8 +22,57 @@ declare module '@ckeditor/ckeditor5-utils/src/first' {
   export default first;
 }
 
+declare module '@ckeditor/ckeditor5-utils/src/keyboard' {
+  export interface KeystrokeInfo {
+    altKey: boolean;
+    ctrlKey: boolean;
+    keyCode: number;
+    shiftKey: boolean;
+  }
+
+  export default KeystrokeInfo;
+}
+
+declare module '@ckeditor/ckeditor5-engine/src/view/observer/keyobserver' {
+  export class KeyObserver {
+  }
+
+  export default KeyObserver;
+}
+
+declare module '@ckeditor/ckeditor5-utils/src/keystrokehandler' {
+  import { Emitter } from '@ckeditor/ckeditor5-utils/src/emittermixin';
+  import { PriorityString } from '@ckeditor/ckeditor5-utils/src/priorities';
+
+  export class KeystrokeHandler {
+    constructor();
+
+    destroy(): void;
+
+    listenTo(emitter: Emitter | HTMLElement): void;
+
+    press(keyEvtData: any): boolean;
+
+    set(
+      keystroke: string | Array<string | number>,
+      callback: (event: KeyboardEvent, cancel: () => void) => void,
+      options?: { priority: PriorityString },
+    ): void
+  }
+
+  export default KeystrokeHandler;
+}
+
 declare module '@ckeditor/ckeditor5-utils/src/focustracker' {
-  export class FocusTracker {
+  import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
+
+  export class FocusTracker extends ObservableMixin {
+    readonly focusedElement: HTMLElement;
+    readonly isFocused: boolean;
+
+    add(element: HTMLElement): void;
+
+    remove(element: HTMLElement): void;
   }
 
   export default FocusTracker;

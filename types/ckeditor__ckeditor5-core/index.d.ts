@@ -5,7 +5,19 @@
 // TypeScript Version: 2.3
 
 declare module '@ckeditor/ckeditor5-core/src/plugincollection' {
+  import Editor from '@ckeditor/ckeditor5-core/src/editor/editor';
+  import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+
   export class PluginCollection {
+    constructor(editor: Editor, availablePlugins?: any[]);
+
+    [Symbol.iterator](): Iterator<[any, Plugin]>;
+
+    destroy(): Promise<any>;
+
+    get<P extends Plugin>(key: any): P;
+
+    load(plugins: Array<any>, removePlugins?: Array<any>): Promise<any[]>;
   }
 
   export default PluginCollection;
@@ -112,9 +124,10 @@ declare module '@ckeditor/ckeditor5-core/src/editor/editorui' {
   import Editor from '@ckeditor/ckeditor5-core/src/editor/editor';
   import ComponentFactory from '@ckeditor/ckeditor5-ui/src/componentfactory';
   import EditorUIView from '@ckeditor/ckeditor5-ui/src/editorui/editoruiview';
+  import EmitterMixin from '@ckeditor/ckeditor5-utils/src/emittermixin';
   import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
 
-  export interface EditorUI {
+  export interface EditorUI extends EmitterMixin {
     readonly componentFactory: ComponentFactory;
     readonly editor: Editor;
     readonly focusTracker: FocusTracker;
@@ -133,6 +146,7 @@ declare module '@ckeditor/ckeditor5-core/src/editor/editorwithui' {
 }
 
 declare module '@ckeditor/ckeditor5-core/src/plugin' {
+  import Editor from '@ckeditor/ckeditor5-core/src/editor/editor';
   import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
 
   export interface PluginInterface {
@@ -143,9 +157,9 @@ declare module '@ckeditor/ckeditor5-core/src/plugin' {
     init(): Promise<any> | void;
   }
 
-  export class Plugin<T> extends ObservableMixin implements PluginInterface {
-    static readonly pluginName?: string;
-    static readonly requires?: any[];
+  export class Plugin<T extends Editor = Editor> extends ObservableMixin implements PluginInterface {
+    static readonly pluginName: string;
+    static readonly requires: any[];
     readonly editor: T;
 
     constructor(editor: T);

@@ -1,0 +1,24 @@
+:root {
+  --ck-image-style-spacing: 1.5em;
+}
+
+.ck.ck-insert-image-form {
+  padding: var(--ck-spacing-standard);
+
+  &:focus {
+    /* https://github.com/ckeditor/ckeditor5-link/issues/90 */
+    outline: none;
+  }
+
+  & > :not(:first-child) {
+    margin-left: var(--ck-spacing-standard);
+  }
+
+  & .ck-labeled-input {
+    display: inline-block;
+  }
+
+  & .ck-label {
+    display: none;
+  }
+}
