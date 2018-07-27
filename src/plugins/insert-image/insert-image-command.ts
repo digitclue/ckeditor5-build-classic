@@ -9,14 +9,8 @@ export default class InsertImageCommand extends Command {
     this.isEnabled = this._checkEnabled();
   }
 
-  execute() {
-    console.log('execute');
-
-    const imageUrl = prompt('Image URL');
-
-    if (imageUrl) {
-      this._insertImage(imageUrl);
-    }
+  execute(imageUrl: string) {
+    this._insertImage(imageUrl);
   }
 
   private _getValue(): string {

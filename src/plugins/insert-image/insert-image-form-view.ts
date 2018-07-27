@@ -13,9 +13,9 @@ import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
 import './insert-image.css';
 
 export class InsertImageFormView extends View {
-  private readonly labeledInput: LabeledInputView;
-  private readonly saveButtonView: ButtonView;
-  private readonly cancelButtonView: ButtonView;
+  readonly labeledInput: LabeledInputView<InputTextView>;
+  readonly saveButton: ButtonView;
+  readonly cancelButton: ButtonView;
   private readonly focusTracker: FocusTracker;
   private readonly keystrokes: KeystrokeHandler;
   private readonly _focusables: ViewCollection;
@@ -25,9 +25,9 @@ export class InsertImageFormView extends View {
     super(locale);
 
     this.labeledInput = this._createLabeledInputView();
-    this.saveButtonView = this._createButton(this.t('Save'), checkIcon, 'ck-button-save');
-    this.saveButtonView.type = 'submit';
-    this.cancelButtonView = this._createButton(this.t('Cancel'), cancelIcon, 'ck-button-cancel', 'cancel');
+    this.saveButton = this._createButton(this.t('Save'), checkIcon, 'ck-button-save');
+    this.saveButton.type = 'submit';
+    this.cancelButton = this._createButton(this.t('Cancel'), cancelIcon, 'ck-button-cancel');
 
     this.focusTracker = new FocusTracker();
     this.keystrokes = new KeystrokeHandler();
@@ -37,13 +37,19 @@ export class InsertImageFormView extends View {
       focusTracker: this.focusTracker,
       keystrokeHandler: this.keystrokes,
       actions: {
-        // Navigate form fields backwards using the Shift + Tab keystroke.
         focusPrevious: 'shift + tab',
-
-        // Navigate form fields forwards using the Tab key.
         focusNext: 'tab',
       },
     });
+
+    this.cancelButton
+      .delegate('execute')
+      .to(this, 'cancel');
+
+    this.keystrokes
+      .set('Esc', () => {
+        this.fire('cancel');
+      });
 
     this.setTemplate({
       tag: 'form',
@@ -56,8 +62,8 @@ export class InsertImageFormView extends View {
 
       children: [
         this.labeledInput,
-        this.saveButtonView,
-        this.cancelButtonView,
+        this.saveButton,
+        this.cancelButton,
       ],
     });
   }
@@ -71,8 +77,8 @@ export class InsertImageFormView extends View {
 
     [
       this.labeledInput,
-      this.saveButtonView,
-      this.cancelButtonView,
+      this.saveButton,
+      this.cancelButton,
     ]
       .forEach(v => {
         // Register the view as focusable.
@@ -83,7 +89,7 @@ export class InsertImageFormView extends View {
       });
   }
 
-  private _createButton(label: string, icon: string, className: string, eventName?: string): ButtonView {
+  private _createButton(label: string, icon: string, className: string): ButtonView {
     const button = new ButtonView(this.locale);
 
     button.set({
@@ -98,16 +104,10 @@ export class InsertImageFormView extends View {
       },
     });
 
-    if (eventName) {
-      button
-        .delegate('execute')
-        .to(this, eventName);
-    }
-
     return button;
   }
 
-  private _createLabeledInputView(): LabeledInputView {
+  private _createLabeledInputView(): LabeledInputView<InputTextView> {
     const labeledInput = new LabeledInputView<InputTextView>(this.locale, InputTextView);
 
     labeledInput.label = this.t('Insert image url');

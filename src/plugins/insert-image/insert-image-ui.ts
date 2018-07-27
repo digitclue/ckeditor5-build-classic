@@ -17,8 +17,30 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
     this.balloon = this.editor.plugins.get<ContextualBalloon>(ContextualBalloon);
     this.button = this._createButton();
     this.form = this._createForm();
+  }
 
-    console.log(this.balloon);
+  afterInit() {
+    const command = this.editor.commands.get('insertImage');
+
+    this.listenTo(
+      command,
+      'change:isEnabled',
+      (e, eventName, isEnabled: boolean) => {
+        if (!isEnabled) {
+          this._hideForm();
+        }
+      },
+    );
+
+    clickOutsideHandler({
+      emitter: this.form,
+      activator: () => this._isVisible,
+      contextElements: [
+        this.form.element,
+        this.button.element,
+      ],
+      callback: () => this._hideForm(),
+    });
   }
 
   private get _isVisible(): boolean {
@@ -33,7 +55,6 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
     button.set({
       label: 'Insert image',
       icon: imageIcon,
-      tooltip: true,
     });
 
     button
@@ -48,8 +69,13 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
       .bind('tooltip')
       .to(button, 'isOn', (isOn: boolean) => !isOn);
 
-    button
-      .on('execute', () => this._showForm());
+    this.listenTo(
+      button,
+      'execute',
+      () => this._showForm(),
+    );
+
+    button.render();
 
     editor
       .ui
@@ -66,27 +92,42 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
     // Render the form so its #element is available for clickOutsideHandler.
     form.render();
 
-    clickOutsideHandler({
-      emitter: form,
-      activator: () => this._isVisible,
-      contextElements: [form.element],
-      callback: () => this._hideForm(),
-    });
+    this.listenTo(
+      form,
+      'cancel',
+      () => {
+        this._hideForm();
+        this.editor.editing.view.focus();
+      },
+    );
 
-    this.listenTo(editor.ui, 'update', () => {
-      console.log('update');
-    });
+    this.listenTo(
+      form,
+      'submit',
+      () => {
+        editor.execute('insertImage', form.labeledInput.inputView.element.value);
+        this._hideForm();
+        this.editor.editing.view.focus();
+      },
+    );
 
     return form;
   }
 
   private _showForm() {
+    if (this._isVisible) {
+      this.form.labeledInput.focus();
+      return;
+    }
+
     if (!this.balloon.hasView(this.form)) {
       this.balloon.add({
         view: this.form,
         position: this._getBalloonPositionData(),
       });
     }
+
+    this.form.labeledInput.focus();
   }
 
   private _hideForm() {
@@ -94,6 +135,7 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
       return;
     }
 
+    this.form.labeledInput.inputView.element.value = '';
     this.balloon.remove(this.form);
   }
 

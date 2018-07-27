@@ -237,7 +237,12 @@ declare module '@ckeditor/ckeditor5-utils/src/emittermixin' {
     listenTo(
       emitter: Emitter,
       event: string,
-      callback: () => any,
+      callback: (
+        event: EventInfo,
+        eventName: string,
+        currentValue: any,
+        prevValue: any,
+      ) => any,
       options?: { priority: PriorityString | number },
     ): void;
 

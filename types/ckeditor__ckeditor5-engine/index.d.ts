@@ -4,8 +4,94 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.3
 
+declare module '@ckeditor/ckeditor5-engine/src/conversion/downcastdispatcher' {
+  export class DowncastDispatcher {
+  }
+
+  export default DowncastDispatcher;
+}
+
+declare module '@ckeditor/ckeditor5-engine/src/conversion/mapper' {
+  export class Mapper {
+  }
+
+  export default Mapper;
+}
+
+declare module '@ckeditor/ckeditor5-engine/src/view/domconverter' {
+  export class DomConverter {
+  }
+
+  export default DomConverter;
+}
+
+declare module '@ckeditor/ckeditor5-engine/src/view/observer/observer' {
+  export class Observer {
+  }
+
+  export default Observer;
+}
+
+declare module '@ckeditor/ckeditor5-engine/src/view/document' {
+  import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
+
+  export class Document extends ObservableMixin {
+  }
+
+  export default Document;
+}
+
+declare module '@ckeditor/ckeditor5-engine/src/view/view' {
+  import Document from '@ckeditor/ckeditor5-engine/src/view/document';
+  import DomConverter from '@ckeditor/ckeditor5-engine/src/view/domconverter';
+  import Observer from '@ckeditor/ckeditor5-engine/src/view/observer/observer';
+  import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
+
+  export class View extends ObservableMixin {
+    readonly document: Document;
+    readonly domConverter: DomConverter;
+    readonly domRoots: Map<string, HTMLElement>;
+
+    addObserver(Observer: any): Observer;
+
+    attachDomRoot(domRoot: Element, name?: string): void;
+
+    destroy(): void;
+
+    disableObservers(): void;
+
+    enableObservers(): void;
+
+    focus(): void;
+
+    getDomRoot(name?: string): Element;
+
+    getObserver(Observer: any): Observer;
+
+    render(): void;
+
+    scrollToTheSelection(): void;
+  }
+
+  export default View;
+}
+
 declare module '@ckeditor/ckeditor5-engine/src/controller/editingcontroller' {
-  export class EditingController {
+  import DowncastDispatcher from '@ckeditor/ckeditor5-engine/src/conversion/downcastdispatcher';
+  import Mapper from '@ckeditor/ckeditor5-engine/src/conversion/mapper';
+  import Model from '@ckeditor/ckeditor5-engine/src/model/model';
+  import View from '@ckeditor/ckeditor5-engine/src/view/view';
+  import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
+
+  export class EditingController extends ObservableMixin {
+    readonly downcastDispatcher: DowncastDispatcher;
+    readonly mapper: Mapper;
+    readonly model: Model;
+    readonly view: View;
+
+    constructor(model: Model);
+
+    destroy(): void;
   }
 
   export default EditingController;

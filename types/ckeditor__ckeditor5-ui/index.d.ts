@@ -430,6 +430,7 @@ declare module '@ckeditor/ckeditor5-ui/src/inputtext/inputtextview' {
     isReadOnly: boolean;
     placeholder: string;
     value: string;
+    element: HTMLInputElement;
 
     constructor(locale: Locale);
 
