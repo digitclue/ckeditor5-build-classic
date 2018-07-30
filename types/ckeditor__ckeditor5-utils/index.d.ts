@@ -12,7 +12,7 @@ declare module '@ckeditor/ckeditor5-utils/src/dom/position' {
     fitInViewport?: boolean;
     limiter?: HTMLElement | Range | ClientRect | DOMRect | (() => any);
     positions?: Array<(...args) => Position>;
-    target?: HTMLElement | Range | ClientRect | DOMRect | (() => any);
+    target?: HTMLElement | Node | Range | ClientRect | DOMRect | (() => any);
   }
 }
 

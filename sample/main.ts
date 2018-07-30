@@ -21,6 +21,16 @@ AcoreEditor
       '|',
       'test',
     ],
+
+    image: {
+      toolbar: [
+        'imageStyle:full',
+        'imageStyle:side',
+        '|',
+        'imageTextAlternative',
+        'changeImage',
+      ],
+    },
   })
   .catch(err => {
     console.error(err.stack);

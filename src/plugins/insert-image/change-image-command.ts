@@ -5,19 +5,20 @@ import {
   isImageUrl,
 } from './insert-image-utils';
 
-export default class InsertImageCommand extends Command {
+export class ChangeImageCommand extends Command {
   value: string;
 
   refresh() {
     this.value = this._getValue();
     this.isEnabled = this._checkEnabled();
+    console.log('refresh');
   }
 
   execute(imageUrl: string) {
     const urlWithoutQuery = getUrlWithoutQuery(imageUrl);
 
     if (isImageUrl(urlWithoutQuery)) {
-      this._insertImage(urlWithoutQuery);
+      this._changeImage(urlWithoutQuery);
     } else {
       alert('Don`t do that!');
     }
@@ -36,20 +37,18 @@ export default class InsertImageCommand extends Command {
   private _checkEnabled(): boolean {
     const element = this.editor.model.document.selection.getSelectedElement();
 
-    return !isImage(element);
+    return isImage(element);
   }
 
-  private _insertImage(imageUrl: string): void {
+  private _changeImage(imageUrl: string): void {
     const { model } = this.editor;
+    const imageElement = model.document.selection.getSelectedElement();
 
     model
       .change(writer => {
-        const imageElement = writer.createElement('image', {
-          src: imageUrl,
-        });
-
-        // Insert the image in the current selection location.
-        model.insertContent(imageElement, model.document.selection);
+        writer.setAttribute('src', imageUrl, imageElement);
       });
   }
 }
+
+export default ChangeImageCommand;

@@ -8,7 +8,7 @@ import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextu
 import { Options } from '@ckeditor/ckeditor5-utils/src/dom/position';
 import { InsertImageFormView } from './insert-image-form-view';
 
-export class InsertImageUi extends Plugin<EditorWithUI> {
+export class ChangeImageUi extends Plugin<EditorWithUI> {
   private button: ButtonView;
   private form: InsertImageFormView;
   private balloon: ContextualBalloon;
@@ -26,7 +26,7 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
   }
 
   private attachEvents() {
-    const command = this.editor.commands.get('insertImage');
+    const command = this.editor.commands.get('changeImage');
 
     this.listenTo(
       command,
@@ -57,7 +57,7 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
       this.form,
       'submit',
       () => {
-        this.editor.execute('insertImage', this.form.labeledInput.inputView.element.value);
+        command.execute(this.form.labeledInput.inputView.element.value);
         this._hideForm();
         this.editor.editing.view.focus();
       },
@@ -66,42 +66,32 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
     clickOutsideHandler({
       emitter: this.form,
       activator: () => this._isVisible,
-      contextElements: [
-        this.form.element,
-        this.button.element,
-      ],
+      contextElements: [this.form.element],
       callback: () => this._hideForm(),
     });
   }
 
   private _createButton(): ButtonView {
     const editor = this.editor;
-    const command = editor.commands.get('insertImage');
+    const command = editor.commands.get('changeImage');
     const button = new ButtonView(editor.locale);
 
     button.set({
-      label: editor.t('Insert image'),
+      label: editor.t('Change image'),
       icon: imageIcon,
+      tooltip: true,
     });
 
     button
       .bind('isEnabled')
       .to(command, 'isEnabled');
 
-    button
-      .bind('isOn')
-      .to(this.balloon.view, 'isVisible');
-
-    button
-      .bind('tooltip')
-      .to(button, 'isOn', (isOn: boolean) => !isOn);
-
     button.render();
 
     editor
       .ui
       .componentFactory
-      .add('insertImage', () => this.button);
+      .add('changeImage', () => this.button);
 
     return button;
   }
@@ -117,9 +107,12 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
 
   private _showForm() {
     if (this._isVisible) {
-      this.form.labeledInput.focus();
       return;
     }
+
+    const editor = this.editor;
+    const command = editor.commands.get( 'changeImage' );
+    const labeledInput = this.form.labeledInput;
 
     if (!this.balloon.hasView(this.form)) {
       this.balloon.add({
@@ -128,7 +121,9 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
       });
     }
 
-    this.form.labeledInput.focus();
+    labeledInput.value = labeledInput.inputView.element.value = command.value || '';
+
+    labeledInput.select();
   }
 
   private _hideForm() {
@@ -141,10 +136,11 @@ export class InsertImageUi extends Plugin<EditorWithUI> {
   }
 
   private _getBalloonPositionData(): Options {
-    const { defaultPositions } = BalloonPanelView;
+    const editingView = this.editor.editing.view;
+    const defaultPositions = BalloonPanelView.defaultPositions;
 
     return {
-      target: this.button.element,
+      target: editingView.domConverter.viewToDom(editingView.document.selection.getSelectedElement(), null),
       positions: [
         defaultPositions.northArrowSouth,
         defaultPositions.northArrowSouthWest,

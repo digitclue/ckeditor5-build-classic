@@ -4,12 +4,34 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.3
 
+declare module '@ckeditor/ckeditor5-engine/src/view/text' {
+  export class Text {
+  }
+
+  export default Text;
+}
+
 declare module '@ckeditor/ckeditor5-engine/src/conversion/downcastdispatcher' {
   export class DowncastDispatcher {
   }
 
   export default DowncastDispatcher;
 }
+
+declare module '@ckeditor/ckeditor5-engine/src/view/uielement' {
+  export class UIElement {
+  }
+
+  export default UIElement;
+}
+
+declare module '@ckeditor/ckeditor5-engine/src/view/editableelement' {
+  export class EditableElement {
+  }
+
+  export default EditableElement;
+}
+
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/mapper' {
   export class Mapper {
@@ -18,8 +40,105 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/mapper' {
   export default Mapper;
 }
 
+declare module '@ckeditor/ckeditor5-engine/src/view/rooteditableelement' {
+  export class RootEditableElement {
+  }
+
+  export default RootEditableElement;
+}
+
 declare module '@ckeditor/ckeditor5-engine/src/view/domconverter' {
+  import ViewDocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment';
+  import ViewDocumentSelection from '@ckeditor/ckeditor5-engine/src/model/documentselection';
+  import ViewElement from '@ckeditor/ckeditor5-engine/src/model/element';
+  import ViewNode from '@ckeditor/ckeditor5-engine/src/model/node';
+  import ViewPosition from '@ckeditor/ckeditor5-engine/src/model/position';
+  import ViewRange from '@ckeditor/ckeditor5-engine/src/model/range';
+  import ViewSelection from '@ckeditor/ckeditor5-engine/src/model/selection';
+  import ViewEditableElement from '@ckeditor/ckeditor5-engine/src/view/editableelement';
+  import ViewText from '@ckeditor/ckeditor5-engine/src/view/text';
+  import ViewUIElement from '@ckeditor/ckeditor5-engine/src/view/uielement';
+
   export class DomConverter {
+    readonly blockElements: string[];
+    readonly blockFiller: any;
+    readonly preElements: string[];
+
+    constructor(options: { blockFiller?: any; });
+
+    _checkShouldLeftTrimDomText(prevNode: Node): void;
+
+    _checkShouldRightTrimDomText(node: Node, prevNode: Node): void;
+
+    _getTouchingViewTextNode(node: ViewText, getNext: boolean): ViewText;
+
+    bindDocumentFragments(domFragment: DocumentFragment, viewFragment: ViewDocumentFragment): void;
+
+    bindElements(domElement: HTMLElement, viewElement: ViewElement): void;
+
+    bindFakeSelection(domElement: HTMLElement, viewDocumentSelection: ViewDocumentSelection): void
+
+    domChildrenToView(domElement: HTMLElement, options: object): Iterator<ViewNode>;
+
+    domPositionToView(domParent: Node, domOffset: number): ViewPosition;
+
+    domRangeToView(domRange: Range): ViewRange;
+
+    domSelectionToView(domSelection: Selection): ViewSelection;
+
+    domToView(domNode: Node | DocumentFragment, options ?: {
+      bind?: boolean,
+      withChildren?: boolean,
+      keepOriginalCase?: boolean
+    }): ViewNode | ViewDocumentFragment;
+
+    fakeSelectionToView(domElement: HTMLElement): ViewSelection;
+
+    findCorrespondingDomText(viewText: ViewText): Text;
+
+    findCorrespondingViewText(domText: Text): ViewText;
+
+    focus(viewEditable: ViewEditableElement): void;
+
+    getParentUIElement(domNode: Node): ViewUIElement;
+
+    isComment(node: Node): boolean;
+
+    isDocumentFragment(node: Node): boolean;
+
+    isDomSelectionBackward(DOM: Selection): boolean;
+
+    isDomSelectionCorrect(domSelection: Selection): boolean;
+
+    isElement(node: Node): boolean;
+
+    mapDomToView(domElementOrDocumentFragment: DocumentFragment | Element): ViewElement | ViewDocumentFragment;
+
+    mapViewToDom(viewNode: ViewElement | ViewDocumentFragment): Node | DocumentFragment;
+
+    unbindDomElement(domElement: HTMLElement): void;
+
+    viewChildrenToDom(
+      viewElement: ViewElement | ViewDocumentFragment,
+      domDocument: Document,
+      options: {
+        bind: boolean,
+        withChildren: boolean,
+      },
+    ): Iterator<Node>;
+
+    viewPositionToDom(viewPosition: ViewPosition): object;
+
+    viewRangeToDom(viewRange: ViewRange): Range;
+
+    viewToDom(
+      viewNode: ViewNode | ViewDocumentFragment,
+      domDocument: Document,
+      options?: {
+        bind?: boolean,
+        withChildren?: boolean,
+      },
+    ): Node | DocumentFragment;
   }
 
   export default DomConverter;
@@ -33,9 +152,25 @@ declare module '@ckeditor/ckeditor5-engine/src/view/observer/observer' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/document' {
+  import DocumentSelection from '@ckeditor/ckeditor5-engine/src/model/documentselection';
+  import Writer from '@ckeditor/ckeditor5-engine/src/model/writer';
+  import RootEditableElement from '@ckeditor/ckeditor5-engine/src/view/rooteditableelement';
+  import Collection from '@ckeditor/ckeditor5-utils/src/collection';
   import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
 
   export class Document extends ObservableMixin {
+    readonly isComposing: boolean;
+    readonly isFocused: boolean;
+    readonly isReadOnly: boolean;
+    readonly roots: Collection<any>;
+    readonly selection: DocumentSelection;
+
+    constructor();
+
+    getRoot(name?: string): RootEditableElement;
+
+    registerPostFixer(postFixer: (writer: Writer) => boolean): void;
+
   }
 
   export default Document;
@@ -112,7 +247,120 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/conversion' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/writer' {
+  import Batch from '@ckeditor/ckeditor5-engine/src/model/batch';
+  import DocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment';
+  import DocumentSelection from '@ckeditor/ckeditor5-engine/src/model/documentselection';
+  import Element from '@ckeditor/ckeditor5-engine/src/model/element';
+  import Item from '@ckeditor/ckeditor5-engine/src/model/item';
+  import { Marker } from '@ckeditor/ckeditor5-engine/src/model/markercollection';
+  import Model from '@ckeditor/ckeditor5-engine/src/model/model';
+  import Node from '@ckeditor/ckeditor5-engine/src/model/node';
+  import Position from '@ckeditor/ckeditor5-engine/src/model/position';
+  import Range from '@ckeditor/ckeditor5-engine/src/model/range';
+  import Selection from '@ckeditor/ckeditor5-engine/src/model/selection';
+  import Text from '@ckeditor/ckeditor5-engine/src/view/text';
+
   export class Writer {
+    readonly batch: Batch;
+    readonly model: Model;
+
+    addMarker(
+      name: string,
+      options: {
+        usingOperation: boolean,
+        range: Range,
+        affectsData?: boolean,
+      },
+    ): Marker;
+
+    append(item: Item | DocumentFragment, parent: Element | DocumentFragment): void;
+
+    appendElement(name: string, parent: Element | DocumentFragment): void;
+    appendElement(name: string, attributes: object, parent: Element | DocumentFragment): void;
+
+    appendText(text: string, parent: Element | DocumentFragment): void;
+    appendText(text: string, attributes: object, parent: Element | DocumentFragment): void;
+
+    clearAttributes(itemOrRange: Item | Range): void;
+
+    createDocumentFragment(): DocumentFragment;
+
+    createElement(name: string, attributes?: object): Element;
+
+    createText(data: string, attributes?: object): Text;
+
+    insert(
+      item: Item | DocumentFragment,
+      itemOrPosition: Item | Position,
+      offset?: number | 'end' | 'before' | 'after',
+    ): void;
+
+    insertElement(
+      name: string,
+      itemOrPosition: Item | Position,
+      offset?: number | 'end' | 'before' | 'after',
+    ): void;
+    insertElement(
+      name: string,
+      attributes: object,
+      itemOrPosition: Item | Position,
+      offset?: number | 'end' | 'before' | 'after',
+    ): void;
+
+    insertText(
+      data: string,
+      itemOrPosition: Item | Position,
+      offset?: number | 'end' | 'before' | 'after',
+    ): void;
+    insertText(
+      data: string,
+      attributes: object,
+      itemOrPosition: Item | Position,
+      offset?: number | 'end' | 'before' | 'after',
+    ): void;
+
+    merge(position: Position): void;
+
+    move(range: Range, itemOrPosition: Item | Position, offset?: number | 'end' | 'before' | 'after'): void;
+
+    overrideSelectionGravity(): string;
+
+    remove(itemOrRange: Item | Range): void;
+
+    removeAttribute(key: string, itemOrRange: Item | Range): void;
+
+    removeMarker(markerOrName: Marker | string): void;
+
+    removeSelectionAttribute(keyOrIterableOfKeys: string | Iterator<string>): void;
+
+    rename(element: Element, newName: string): void;
+
+    restoreSelectionGravity(uid: string): void;
+
+    setAttribute(key: string, value: any, itemOrRange: Item | Range): void;
+
+    setAttributes(attributes: { [key: string]: any }, itemOrRange: Item | Range): void;
+
+    setSelection(
+      selectable: Selection | DocumentSelection | Position | Node | Iterator<Range> | Range,
+      placeOrOffset?,
+      options?: { backward: boolean },
+    ): void;
+
+    setSelectionAttribute(keyOrObjectOrIterable: string | { [key: string]: any } | Iterator<any>, value?: any): void;
+
+    setSelectionFocus(itemOrPosition: Item | Position, offset?: number | 'end' | 'before' | 'after'): void;
+
+    split(position: Position, limitElement?: Node): { position: Position, range: Range };
+
+    unwrap(element: Element): void;
+
+    updateMarker(
+      markerOrName: string,
+      options: { range?: Range, usingOperation?: boolean, affectsData?: boolean },
+    ): void;
+
+    wrap(range: Range, elementOrString: Element | string): void;
   }
 
   export default Writer;
@@ -529,6 +777,7 @@ declare module '@ckeditor/ckeditor5-engine/src/model/model' {
   import Range from '@ckeditor/ckeditor5-engine/src/model/range';
   import Schema from '@ckeditor/ckeditor5-engine/src/model/schema';
   import Selection from '@ckeditor/ckeditor5-engine/src/model/selection';
+  import Writer from '@ckeditor/ckeditor5-engine/src/model/writer';
   import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
 
   export class Model extends ObservableMixin {
@@ -538,7 +787,7 @@ declare module '@ckeditor/ckeditor5-engine/src/model/model' {
 
     applyOperation(operation: Operation): void;
 
-    change<T>(callback: (...args: any[]) => T): T;
+    change<T>(callback: (writer: Writer) => T): T;
 
     deleteContent(
       selection: Selection | DocumentSelection,
