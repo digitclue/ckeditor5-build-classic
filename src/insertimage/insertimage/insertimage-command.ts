@@ -1,5 +1,6 @@
 import Command from '@ckeditor/ckeditor5-core/src/command';
 import { isImage } from '@ckeditor/ckeditor5-image/src/image/utils';
+import Notification from '@ckeditor/ckeditor5-ui/src/notification/notification';
 import {
   getUrlWithoutQuery,
   isImageUrl,
@@ -16,10 +17,19 @@ export default class InsertImageCommand extends Command {
   execute(imageUrl: string) {
     const urlWithoutQuery = getUrlWithoutQuery(imageUrl);
 
+    console.log(this.editor.plugins.get<Notification>('Notification'));
+
     if (isImageUrl(urlWithoutQuery)) {
       this._insertImage(urlWithoutQuery);
     } else {
-      alert('Don`t do that!');
+      const editor = this.editor;
+      const notification = editor.plugins.get<Notification>('Notification');
+
+      if (notification) {
+        notification.showWarning(editor.t('Provided url is not an image'));
+      } else {
+        alert('Don`t do that!');
+      }
     }
   }
 

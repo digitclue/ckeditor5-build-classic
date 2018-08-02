@@ -37,6 +37,8 @@ import List from '@ckeditor/ckeditor5-list/src/list';
 // @ts-ignore
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 
+import Notification from '@ckeditor/ckeditor5-ui/src/notification/notification';
+
 import { ChangeImage } from './insertimage/changeimage';
 import { InsertImage } from './insertimage/insertimage';
 
@@ -61,6 +63,7 @@ AcoreEditor.builtinPlugins = [
   Link,
   List,
   Paragraph,
+  Notification,
 
   InsertImage,
   ChangeImage,
