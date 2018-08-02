@@ -3,11 +3,6 @@
  * For licensing, see LICENSE.md.
  */
 
-// The editor creator to use.
-import ClassicEditorBase from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
-
-// @ts-ignore
-import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
 // @ts-ignore
 import Autoformat from '@ckeditor/ckeditor5-autoformat/src/autoformat';
 // @ts-ignore
@@ -18,8 +13,13 @@ import Italic from '@ckeditor/ckeditor5-basic-styles/src/italic';
 import Underline from '@ckeditor/ckeditor5-basic-styles/src/underline';
 // @ts-ignore
 import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote';
+import Editor from '@ckeditor/ckeditor5-core/src/editor/editor';
 // @ts-ignore
 import EasyImage from '@ckeditor/ckeditor5-easy-image/src/easyimage';
+// The editor creator to use.
+import ClassicEditorBase from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
+// @ts-ignore
+import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
 // @ts-ignore
 import Heading from '@ckeditor/ckeditor5-heading/src/heading';
 // @ts-ignore
@@ -37,7 +37,11 @@ import List from '@ckeditor/ckeditor5-list/src/list';
 // @ts-ignore
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 
-export default class AcoreEditor extends ClassicEditorBase {
+import { ChangeImage } from './insertimage/changeimage';
+import { InsertImage } from './insertimage/insertimage';
+
+
+export default class AcoreEditor extends (ClassicEditorBase as typeof Editor) {
 }
 
 // Plugins to include in the build.
@@ -57,22 +61,22 @@ AcoreEditor.builtinPlugins = [
   Link,
   List,
   Paragraph,
+
+  InsertImage,
+  ChangeImage,
 ];
 
 // Editor configuration.
 AcoreEditor.defaultConfig = {
   toolbar: {
     items: [
-      'heading',
-      '|',
       'bold',
       'italic',
-      'link',
-      'bulletedList',
-      'numberedList',
-      'blockQuote',
-      'undo',
-      'redo',
+      'underline',
+      '|',
+      'blockquote',
+      '|',
+      'insertImage',
     ],
   },
   image: {
@@ -81,6 +85,7 @@ AcoreEditor.defaultConfig = {
       'imageStyle:side',
       '|',
       'imageTextAlternative',
+      'changeImage',
     ],
   },
   // This value must be kept in sync with the language defined in webpack.config.js.

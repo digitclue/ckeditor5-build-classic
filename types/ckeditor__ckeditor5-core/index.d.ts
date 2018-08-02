@@ -92,7 +92,7 @@ declare module '@ckeditor/ckeditor5-core/src/editor/editor' {
     static builtinPlugins: any[];
     static defaultConfig: object;
 
-    static create(element: Element, config: object): Promise<any>;
+    static create(element: Element, config?: object): Promise<any>;
 
     readonly commands: CommandCollection;
     readonly config: Config;

@@ -6,7 +6,7 @@ import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
 import BalloonPanelView from '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview';
 import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon';
 import { Options } from '@ckeditor/ckeditor5-utils/src/dom/position';
-import { InsertImageFormView } from './insert-image-form-view';
+import { InsertImageFormView } from '../ui/insertimage-form-view';
 
 export class InsertImageUi extends Plugin<EditorWithUI> {
   private button: ButtonView;

@@ -1,5 +1,5 @@
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import ChangeImageCommand from './change-image-command';
+import ChangeImageCommand from './changeimage-command';
 
 export class ChangeImageEditing extends Plugin {
   init() {

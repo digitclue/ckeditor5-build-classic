@@ -3,22 +3,21 @@ import { isImage } from '@ckeditor/ckeditor5-image/src/image/utils';
 import {
   getUrlWithoutQuery,
   isImageUrl,
-} from './insert-image-utils';
+} from '../utils';
 
-export class ChangeImageCommand extends Command {
+export default class InsertImageCommand extends Command {
   value: string;
 
   refresh() {
     this.value = this._getValue();
     this.isEnabled = this._checkEnabled();
-    console.log('refresh');
   }
 
   execute(imageUrl: string) {
     const urlWithoutQuery = getUrlWithoutQuery(imageUrl);
 
     if (isImageUrl(urlWithoutQuery)) {
-      this._changeImage(urlWithoutQuery);
+      this._insertImage(urlWithoutQuery);
     } else {
       alert('Don`t do that!');
     }
@@ -37,18 +36,20 @@ export class ChangeImageCommand extends Command {
   private _checkEnabled(): boolean {
     const element = this.editor.model.document.selection.getSelectedElement();
 
-    return isImage(element);
+    return !isImage(element);
   }
 
-  private _changeImage(imageUrl: string): void {
+  private _insertImage(imageUrl: string): void {
     const { model } = this.editor;
-    const imageElement = model.document.selection.getSelectedElement();
 
     model
       .change(writer => {
-        writer.setAttribute('src', imageUrl, imageElement);
+        const imageElement = writer.createElement('image', {
+          src: imageUrl,
+        });
+
+        // Insert the image in the current selection location.
+        model.insertContent(imageElement, model.document.selection);
       });
   }
 }
-
-export default ChangeImageCommand;

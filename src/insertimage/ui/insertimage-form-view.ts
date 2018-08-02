@@ -10,7 +10,7 @@ import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
 import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
 import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
 
-import './insert-image.css';
+import '../theme/insertimage.css';
 
 export class InsertImageFormView extends View {
   readonly labeledInput: LabeledInputView<InputTextView>;
