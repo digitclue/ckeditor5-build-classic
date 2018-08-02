@@ -4,169 +4,6 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.3
 
-declare module '@ckeditor/ckeditor5-ui/src/focuscycler' {
-  import View from '@ckeditor/ckeditor5-ui/src/view';
-  import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
-  import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
-  import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
-
-  export class FocusCycler {
-    readonly actions: { [action: string]: string | string[] };
-    readonly current: number;
-    readonly first: View;
-    readonly focusTracker: FocusTracker;
-    readonly focusables: ViewCollection;
-    readonly keystrokeHandler: KeystrokeHandler;
-    readonly last: View;
-    readonly next: View;
-    readonly previous: View;
-
-    constructor(options: {
-      focusables: ViewCollection,
-      focusTracker: FocusTracker,
-      keystrokeHandler?: KeystrokeHandler,
-      actions?: { [action: string]: string | string[] },
-    });
-
-    focusFirst(): void;
-
-    focusLast(): void;
-
-    focusNext(): void;
-
-    focusPrevious(): void;
-  }
-
-  export default FocusCycler;
-}
-
-declare module '@ckeditor/ckeditor5-ui/src/componentfactory' {
-  import { EditorWithUI } from '@ckeditor/ckeditor5-core/src/editor/editorwithui';
-  import View from '@ckeditor/ckeditor5-ui/src/view';
-  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
-
-  export class ComponentFactory {
-    readonly editor: EditorWithUI;
-
-    constructor(editor: EditorWithUI);
-
-    add(name: string, callback: (locale: Locale) => View): void;
-
-    create(name: string): View;
-
-    has(name: string): boolean;
-
-    names(): Iterable<string>;
-  }
-
-  export default ComponentFactory;
-}
-
-declare module '@ckeditor/ckeditor5-ui/src/viewcollection' {
-  import View from '@ckeditor/ckeditor5-ui/src/view';
-  import Collection from '@ckeditor/ckeditor5-utils/src/collection';
-  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
-
-  export class ViewCollection extends Collection<View> {
-    locale: Locale;
-
-    constructor(locale?: Locale);
-
-    destroy(): void;
-  }
-
-  export default ViewCollection;
-}
-
-declare module '@ckeditor/ckeditor5-ui/src/template' {
-  import View from '@ckeditor/ckeditor5-ui/src/view';
-  import EmitterMixin, { Emitter } from '@ckeditor/ckeditor5-utils/src/emittermixin';
-  import ObservableMixin, { Observable } from '@ckeditor/ckeditor5-utils/src/observablemixin';
-
-  export class Template extends EmitterMixin {
-    attributes: { [attribute: string]: any };
-    children: Array<Template | Node>;
-    eventListeners: object;
-    tag: string;
-    text: Array<string | TemplateValueSchema>;
-
-    constructor(def: TemplateDefinition);
-
-    static bind(observable: Observable, emitter: Emitter): BindChain;
-
-    static extend(template: Template, def: TemplateDefinition): void;
-
-    apply(node: Node): void;
-
-    getViews(): Iterable<View>;
-
-    render(): HTMLElement | Text;
-
-    revert(node: Node): void;
-  }
-
-  class TemplateBinding {
-    attribute: string;
-    callback: (...args: any[]) => any;
-    emitter: EmitterMixin;
-    observable: ObservableMixin;
-
-    constructor(def: TemplateDefinition);
-
-    activateAttributeListener(schema: TemplateValueSchema, updater: (...args: any[]) => any, data: RenderData);
-
-    getValue(node: Node): any;
-  }
-
-  interface RenderData {
-    intoFragment: boolean;
-    isApplying: boolean;
-    node: HTMLElement | Text;
-    revertData: object;
-  }
-
-  export interface BindChain {
-    if(
-      attribute: string,
-      valueIfTrue?: string,
-      callback?: (value: any, node: Node) => boolean,
-    ): TemplateBinding;
-
-    to(
-      eventNameOrFunctionOrAttribute: string | ((...args: any[]) => any),
-      callback?: (value: any, node: Node) => any,
-    ): TemplateBinding;
-  }
-
-  export interface TemplateDefinition {
-    attributes?: { [key: string]: TemplateValueSchema };
-    children?: Array<Template | TemplateDefinition | View | string | Node>;
-    on?: { [event: string]: TemplateListenerSchema };
-    tag?: string;
-    text?: string | TemplateValueSchema | Array<string | TemplateValueSchema>;
-  }
-
-  export type TemplateListenerSchema =
-    object
-    | string
-    | any[];
-
-  export type TemplateValueSchema =
-    object
-    | string
-    | any[];
-
-  export default Template;
-}
-
-declare module '@ckeditor/ckeditor5-ui/src/bindings/submithandler' {
-  import View from '@ckeditor/ckeditor5-ui/src/view';
-
-  export function submitHandler(options?: { view: View })
-
-  export default submitHandler;
-}
-
 declare module '@ckeditor/ckeditor5-ui/src/bindings/clickoutsidehandler' {
   import { Emitter } from '@ckeditor/ckeditor5-utils/src/emittermixin';
 
@@ -180,51 +17,19 @@ declare module '@ckeditor/ckeditor5-ui/src/bindings/clickoutsidehandler' {
   export default clickOutsideHandler;
 }
 
-declare module '@ckeditor/ckeditor5-ui/src/view' {
-  import Template, {
-    BindChain,
-    TemplateDefinition,
-  } from '@ckeditor/ckeditor5-ui/src/template';
-  import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
-  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
-  import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
-
-  export class View extends ObservableMixin {
-    readonly isRendered: boolean;
-    readonly locale: Locale;
-    element: HTMLElement | null;
-    template: Template;
-    bindTemplate: BindChain;
-
-    constructor(locale?: Locale);
-
-    createCollection(): ViewCollection;
-
-    deregisterChild(children: View | Iterable<View>): void;
-
-    destroy(): void;
-
-    extendTemplate(definition: TemplateDefinition): void;
-
-    registerChild(children: View | Iterable<View>): void;
-
-    render(): void;
-
-    setTemplate(definition: TemplateDefinition): void;
-
-    t(str: string, values?: string[]): string;
-  }
-
-  export default View;
-}
-
-declare module '@ckeditor/ckeditor5-ui/src/icon/iconview' {
+declare module '@ckeditor/ckeditor5-ui/src/bindings/preventdefault' {
+  import { TemplateToBinding } from '@ckeditor/ckeditor5-ui/src/template';
   import View from '@ckeditor/ckeditor5-ui/src/view';
 
-  export class IconView extends View {
-  }
+  export function preventDefault(view: View): TemplateToBinding ;
+}
 
-  export default IconView;
+declare module '@ckeditor/ckeditor5-ui/src/bindings/submithandler' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+
+  export function submitHandler(options?: { view: View })
+
+  export default submitHandler;
 }
 
 declare module '@ckeditor/ckeditor5-ui/src/button/button' {
@@ -269,6 +74,119 @@ declare module '@ckeditor/ckeditor5-ui/src/button/buttonview' {
   }
 
   export default ButtonView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/button/switchbuttonview' {
+  import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+
+  export default class SwitchButtonView extends ButtonView {
+    readonly toggleSwitchView: View;
+  }
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/editorui/editoruiview' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
+
+  export class EditorUIView extends View {
+    readonly body: ViewCollection;
+  }
+
+  export default EditorUIView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/icon/iconview' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+
+  export class IconView extends View {
+  }
+
+  export default IconView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/inputtext/inputtextview' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
+
+  export class InputTextView extends View {
+    id: string;
+    isReadOnly: boolean;
+    placeholder: string;
+    value: string;
+    element: HTMLInputElement;
+
+    constructor(locale: Locale);
+
+    focus(): void;
+
+    select(): void;
+  }
+
+  export default InputTextView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/label/labelview' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+
+  export class LabelView extends View {
+    for: string;
+    text: string;
+  }
+
+  export default LabelView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/labeledinput/labeledinputview' {
+  import LabelView from '@ckeditor/ckeditor5-ui/src/label/labelview';
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
+
+  export class LabeledInputView<T extends View> extends View {
+    inputView: T;
+    isReadOnly: boolean;
+    label: string;
+    labelView: LabelView;
+    value: string;
+
+    constructor(locale: Locale, InputView: typeof View);
+
+    focus(): void;
+
+    select(): void;
+  }
+
+  export default LabeledInputView;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/notification/notification' {
+  import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+
+  export default class Notification extends Plugin {
+    showInfo(
+      message: string,
+      data?: {
+        namespace?: string,
+        title?: string,
+      },
+    ): void;
+
+    showSuccess(
+      message: string,
+      data?: {
+        namespace?: string,
+        title?: string,
+      },
+    ): void;
+
+    showWarning(
+      message: string,
+      data?: {
+        namespace?: string,
+        title?: string,
+      },
+    ): void;
+  }
 }
 
 declare module '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview' {
@@ -377,67 +295,204 @@ declare module '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon' {
   export default ContextualBalloon;
 }
 
-declare module '@ckeditor/ckeditor5-ui/src/editorui/editoruiview' {
+
+declare module '@ckeditor/ckeditor5-ui/src/componentfactory' {
+  import { EditorWithUI } from '@ckeditor/ckeditor5-core/src/editor/editorwithui';
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
+
+  export class ComponentFactory {
+    readonly editor: EditorWithUI;
+
+    constructor(editor: EditorWithUI);
+
+    add(name: string, callback: (locale: Locale) => View): void;
+
+    create(name: string): View;
+
+    has(name: string): boolean;
+
+    names(): Iterable<string>;
+  }
+
+  export default ComponentFactory;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/focuscycler' {
   import View from '@ckeditor/ckeditor5-ui/src/view';
   import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
+  import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
+  import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
 
-  export class EditorUIView extends View {
-    readonly body: ViewCollection;
+  export class FocusCycler {
+    readonly actions: { [action: string]: string | string[] };
+    readonly current: number;
+    readonly first: View;
+    readonly focusTracker: FocusTracker;
+    readonly focusables: ViewCollection;
+    readonly keystrokeHandler: KeystrokeHandler;
+    readonly last: View;
+    readonly next: View;
+    readonly previous: View;
+
+    constructor(options: {
+      focusables: ViewCollection,
+      focusTracker: FocusTracker,
+      keystrokeHandler?: KeystrokeHandler,
+      actions?: { [action: string]: string | string[] },
+    });
+
+    focusFirst(): void;
+
+    focusLast(): void;
+
+    focusNext(): void;
+
+    focusPrevious(): void;
   }
 
-  export default EditorUIView;
+  export default FocusCycler;
 }
 
-declare module '@ckeditor/ckeditor5-ui/src/labeledinput/labeledinputview' {
-  import LabelView from '@ckeditor/ckeditor5-ui/src/label/labelview';
+declare module '@ckeditor/ckeditor5-ui/src/template' {
   import View from '@ckeditor/ckeditor5-ui/src/view';
+  import EmitterMixin, { Emitter } from '@ckeditor/ckeditor5-utils/src/emittermixin';
+  import ObservableMixin, { Observable } from '@ckeditor/ckeditor5-utils/src/observablemixin';
+
+  export class Template extends EmitterMixin {
+    attributes: { [attribute: string]: any };
+    children: Array<Template | Node>;
+    eventListeners: object;
+    tag: string;
+    text: Array<string | TemplateValueSchema>;
+
+    constructor(def: TemplateDefinition);
+
+    static bind(observable: Observable, emitter: Emitter): BindChain;
+
+    static extend(template: Template, def: TemplateDefinition): void;
+
+    apply(node: Node): void;
+
+    getViews(): Iterable<View>;
+
+    render(): HTMLElement | Text;
+
+    revert(node: Node): void;
+  }
+
+  class TemplateBinding {
+    attribute: string;
+    callback: (...args: any[]) => any;
+    emitter: EmitterMixin;
+    observable: ObservableMixin;
+
+    constructor(def: TemplateDefinition);
+
+    activateAttributeListener(schema: TemplateValueSchema, updater: (...args: any[]) => any, data: RenderData);
+
+    getValue(node: Node): any;
+  }
+
+  interface RenderData {
+    intoFragment: boolean;
+    isApplying: boolean;
+    node: HTMLElement | Text;
+    revertData: object;
+  }
+
+  export class TemplateToBinding {
+    activateDomEventListener(
+      domEvtName: string,
+      domSelector: string,
+      data: RenderData,
+    ): (...args: any[]) => any;
+  }
+
+  export interface BindChain {
+    if(
+      attribute: string,
+      valueIfTrue?: string,
+      callback?: (value: any, node: Node) => boolean,
+    ): TemplateBinding;
+
+    to(
+      eventNameOrFunctionOrAttribute: string | ((...args: any[]) => any),
+      callback?: (value: any, node: Node) => any,
+    ): TemplateBinding;
+  }
+
+  export interface TemplateDefinition {
+    attributes?: { [key: string]: TemplateValueSchema };
+    children?: Array<Template | TemplateDefinition | View | string | Node>;
+    on?: { [event: string]: TemplateListenerSchema };
+    tag?: string;
+    text?: string | TemplateValueSchema | Array<string | TemplateValueSchema>;
+  }
+
+  export type TemplateListenerSchema =
+    object
+    | string
+    | any[];
+
+  export type TemplateValueSchema =
+    object
+    | string
+    | any[];
+
+  export default Template;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/view' {
+  import Template, {
+    BindChain,
+    TemplateDefinition,
+  } from '@ckeditor/ckeditor5-ui/src/template';
+  import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
+  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
+  import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
+
+  export class View extends ObservableMixin {
+    readonly isRendered: boolean;
+    readonly locale: Locale;
+    element: HTMLElement | null;
+    template: Template;
+    bindTemplate: BindChain;
+
+    constructor(locale?: Locale);
+
+    createCollection(): ViewCollection;
+
+    deregisterChild(children: View | Iterable<View>): void;
+
+    destroy(): void;
+
+    extendTemplate(definition: TemplateDefinition): void;
+
+    registerChild(children: View | Iterable<View>): void;
+
+    render(): void;
+
+    setTemplate(definition: TemplateDefinition): void;
+
+    t(str: string, values?: string[]): string;
+  }
+
+  export default View;
+}
+
+declare module '@ckeditor/ckeditor5-ui/src/viewcollection' {
+  import View from '@ckeditor/ckeditor5-ui/src/view';
+  import Collection from '@ckeditor/ckeditor5-utils/src/collection';
   import Locale from '@ckeditor/ckeditor5-utils/src/locale';
 
-  export class LabeledInputView<T = View> extends View {
-    inputView: T;
-    isReadOnly: boolean;
-    label: string;
-    labelView: LabelView;
-    value: string;
+  export class ViewCollection extends Collection<View> {
+    locale: Locale;
 
-    constructor(locale: Locale, InputView: View['constructor']);
+    constructor(locale?: Locale);
 
-    focus(): void;
-
-    select(): void;
+    destroy(): void;
   }
 
-  export default LabeledInputView;
-}
-
-declare module '@ckeditor/ckeditor5-ui/src/label/labelview' {
-  import View from '@ckeditor/ckeditor5-ui/src/view';
-
-  export class LabelView extends View {
-    for: string;
-    text: string;
-  }
-
-  export default LabelView;
-}
-
-declare module '@ckeditor/ckeditor5-ui/src/inputtext/inputtextview' {
-  import View from '@ckeditor/ckeditor5-ui/src/view';
-  import Locale from '@ckeditor/ckeditor5-utils/src/locale';
-
-  export class InputTextView extends View {
-    id: string;
-    isReadOnly: boolean;
-    placeholder: string;
-    value: string;
-    element: HTMLInputElement;
-
-    constructor(locale: Locale);
-
-    focus(): void;
-
-    select(): void;
-  }
-
-  export default InputTextView;
+  export default ViewCollection;
 }
