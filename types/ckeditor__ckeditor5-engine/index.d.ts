@@ -36,10 +36,50 @@ declare module '@ckeditor/ckeditor5-engine/src/controller/editingcontroller' {
 
 /* conversion: start */
 declare module '@ckeditor/ckeditor5-engine/src/conversion/conversion' {
-  export class Conversion {
+  import DowncastDispatcher from '@ckeditor/ckeditor5-engine/src/conversion/downcastdispatcher';
+  import UpcastDispatcher from '@ckeditor/ckeditor5-engine/src/conversion/upcastdispatcher';
+  import { ElementDefinition } from '@ckeditor/ckeditor5-engine/src/view/elementdefinition';
+  import { MatcherPattern } from '@ckeditor/ckeditor5-engine/src/view/matcher';
+  import { PriorityString } from '@ckeditor/ckeditor5-utils/src/priorities';
+
+  export interface ConverterDefinition {
+    converterPriority: PriorityString;
+    model: any;
+    upcastAlso: MatcherPattern | MatcherPattern[];
+    view: ElementDefinition
   }
 
-  export default Conversion;
+  interface AddRecursive {
+    add(): AddRecursive;
+  }
+
+  export default class Conversion {
+    constructor();
+
+    attributeToAttribute(definition: {
+      model: string | {
+        key: string,
+        values?: string[],
+        name?: string,
+      },
+      view: string | {
+        [key: string]: string | {
+          key: string,
+          value: string | string[] | { [key: string]: string },
+          name?: string,
+        },
+      },
+      upcastAlso?: MatcherPattern | MatcherPattern[],
+    }): void;
+
+    attributeToElement(definition: ConverterDefinition): void;
+
+    elementToElement(definition: ConverterDefinition): void;
+
+    for(groupName: string): AddRecursive;
+
+    register(groupName: string, dispatchers: Array<DowncastDispatcher | UpcastDispatcher>): void;
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/downcast-converters' {
@@ -72,6 +112,9 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/upcast-selection-conve
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/upcastdispatcher' {
+  export default class UpcastDispatcher {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/viewconsumable' {
@@ -544,23 +587,158 @@ declare module '@ckeditor/ckeditor5-engine/src/model/nodelist' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/position' {
+  import DocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment';
+  import Element from '@ckeditor/ckeditor5-engine/src/model/element';
+  import Item from '@ckeditor/ckeditor5-engine/src/model/item';
   import Node from '@ckeditor/ckeditor5-engine/src/model/node';
+  import Range from '@ckeditor/ckeditor5-engine/src/model/range';
+  import Text from '@ckeditor/ckeditor5-engine/src/model/text';
+  import { TreeWalkerValue } from '@ckeditor/ckeditor5-engine/src/model/treewalker';
+
+  export type PositionRelation = string;
 
   export class Position {
     readonly index: number;
     readonly isAtEnd: boolean;
     readonly isAtStart: boolean;
-    readonly nodeAfter: Node | null;
+    readonly nodeAfter: Node;
+    readonly nodeBefore: Node;
+    offset: number;
+    readonly parent: Element;
+    readonly path: number[];
+    readonly root: Element | DocumentFragment;
+    readonly textNode: Text;
+
+    static createAfter(item: Item): Position;
+
+    static createAt(itemOrPosition: Item | Position, offset?: number | 'end' | 'before' | 'after'): Position;
+
+    static createBefore(item: Item): Position;
+
+    static createFromParentAndOffset(parent: Element | DocumentFragment, offset: number): Position;
+
+    static createFromPosition(position: Position): Position;
+
+    static fromJSON(json: object): Position;
+
+    constructor(root: Element | DocumentFragment, path: number[]);
+
+    compareWith(otherPosition: Position): PositionRelation;
+
+    getAncestors(): Item[];
+
+    getCommonAncestor(position: Position): Element | DocumentFragment;
+
+    getCommonPath(position: Position): number[];
+
+    getLastMatchingPosition(
+      skip: (value: TreeWalkerValue) => boolean,
+      options: {
+        direction?: 'forward' | 'backward',
+        boundaries?: Range,
+        startPosition?: Position,
+        singleCharacters?: boolean,
+        shallow?: boolean,
+        ignoreElementEnd?: boolean
+      },
+    ): Position;
+
+    getParentPath(): number[];
+
+    getShiftedBy(shift: number): Position;
+
+    isAfter(otherPosition: Position): boolean;
+
+    isBefore(otherPosition: Position): boolean;
+
+    isEqual(otherPosition: Position): boolean;
+
+    isTouching(otherPosition: Position): boolean;
   }
 
   export default Position;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/range' {
-  export class Range {
-  }
+  import Delta from '@ckeditor/ckeditor5-engine/src/model/delta/delta';
+  import Document from '@ckeditor/ckeditor5-engine/src/model/document';
+  import DocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment';
+  import Element from '@ckeditor/ckeditor5-engine/src/model/element';
+  import Item from '@ckeditor/ckeditor5-engine/src/model/item';
+  import Position from '@ckeditor/ckeditor5-engine/src/model/position';
+  import TreeWalker, { TreeWalkerValue } from '@ckeditor/ckeditor5-engine/src/model/treewalker';
 
-  export default Range;
+  export default class Range {
+    readonly end: Position;
+    isCollapsed: boolean;
+    isFlat: boolean;
+    root: Element | DocumentFragment;
+    start: Position;
+
+    static createCollapsedAt(itemOrPosition: Item | Position, offset?: number | 'end' | 'before' | 'after'): Range;
+
+    static createFromParentsAndOffsets(
+      startElement: Element,
+      startOffset: number,
+      endElement: Element,
+      endOffset: number,
+    ): Range;
+
+    static createFromPositionAndShift(position: Position, shift: number): Range;
+
+    static createFromRange(range: Range): Range;
+
+    static createFromRanges(ranges: Range[]): Range;
+
+    static createIn(element: Element): Range;
+
+    static createOn(item: Item): Range;
+
+    static fromJSON(json: object, doc: Document): Range;
+
+    constructor(start: Position, end?: Position);
+
+    [Symbol.iterator]: Iterable<TreeWalkerValue>;
+
+    containsItem(item: Item): boolean;
+
+    containsPosition(position: Position): boolean;
+
+    containsRange(otherRange: Range, loose?: boolean): boolean;
+
+    getCommonAncestor(): Element | DocumentFragment;
+
+    getDifference(otherRange: Range): Range[];
+
+    getIntersection(otherRange: Range): Range;
+
+    getMinimalFlatRanges(): Range[];
+
+    getPositions(options: {
+      direction?: 'forward' | 'backward',
+      boundaries?: Range,
+      startPosition?: Position,
+      singleCharacters?: boolean,
+      shallow?: boolean,
+      ignoreElementEnd?: boolean
+    }): Iterable<Position>;
+
+    getTransformedByDelta(delta: Delta): Range[];
+
+    getTransformedByDeltas(deltas: Iterable<Delta>): Range[];
+
+    getWalker(options: {
+      direction?: 'forward' | 'backward',
+      startPosition?: Position,
+      singleCharacters?: boolean,
+      shallow?: boolean,
+      ignoreElementEnd?: boolean
+    }): TreeWalker;
+
+    isEqual(otherRange: Range): boolean;
+
+    isIntersecting(otherRange: Range): boolean;
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/rootelement' {
@@ -675,6 +853,10 @@ declare module '@ckeditor/ckeditor5-engine/src/model/selection' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/text' {
+  export class Text {
+  }
+
+  export default Text;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/textproxy' {
@@ -685,6 +867,26 @@ declare module '@ckeditor/ckeditor5-engine/src/model/textproxy' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/treewalker' {
+  import Item from '@ckeditor/ckeditor5-engine/src/model/item';
+  import Position from '@ckeditor/ckeditor5-engine/src/model/position';
+
+  export type TreeWalkerValueType =
+    'elementStart'
+    | 'elementEnd'
+    | 'character'
+    | 'text';
+
+  export interface TreeWalkerValue {
+    item: Item;
+    length: number;
+    nextPosition: Position;
+    previousPosition: Position;
+    type: TreeWalkerValueType;
+  }
+
+  export default class TreeWalker {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/writer' {
@@ -995,9 +1197,21 @@ declare module '@ckeditor/ckeditor5-engine/src/view/editableelement' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/element' {
+  export default class Element {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/elementdefinition' {
+  export type ElementDefinition =
+    string
+    | {
+    attributes?: { [key: string]: string },
+    classes?: string | string[],
+    name?: string,
+    priority?: number,
+    styles: { [key: string]: string },
+  };
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/emptyelement' {
@@ -1010,6 +1224,23 @@ declare module '@ckeditor/ckeditor5-engine/src/view/item' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/matcher' {
+  import Element from '@ckeditor/ckeditor5-engine/src/view/element';
+
+  export type MatcherPattern =
+    string
+    | RegExp
+    | {
+    attributes?: { [key: string]: string | RegExp },
+    classes?: string | RegExp | Array<string | RegExp>,
+    name?: string | RegExp,
+    styles: { [key: string]: string | RegExp },
+  }
+    | ((element: Element) => {
+    name?: boolean,
+    attributes?: string[],
+    classes?: string[],
+    styles?: string[]
+  });
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/node' {
