@@ -17,7 +17,7 @@ declare module '@ckeditor/ckeditor5-utils/src/dom/position' {
 }
 
 declare module '@ckeditor/ckeditor5-utils/src/first' {
-  export function first<T>(iterable: Iterator<T>): T;
+  export function first<T>(iterable: Iterable<T>): T;
 
   export default first;
 }
@@ -282,7 +282,7 @@ declare module '@ckeditor/ckeditor5-utils/src/observablemixin' {
   import { PriorityString } from '@ckeditor/ckeditor5-utils/src/priorities';
 
   export interface Observable {
-    bind(bindProperties: string): { to: (...args: any[]) => any, toMany: (...args: any[]) => any };
+    bind(...bindProperties: string[]): { to: (...args: any[]) => any, toMany: (...args: any[]) => any };
 
     decorate(methodName: string): void;
 
@@ -325,7 +325,7 @@ declare module '@ckeditor/ckeditor5-utils/src/observablemixin' {
   }
 
   export abstract class ObservableMixin extends Emitter implements Observable {
-    bind(bindProperties: string): { to: (...args: any[]) => any, toMany: (...args: any[]) => any };
+    bind(...bindProperties: string[]): { to: (...args: any[]) => any, toMany: (...args: any[]) => any };
 
     decorate(methodName: string): void;
 
