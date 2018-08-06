@@ -43,14 +43,14 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/conversion' {
   import { PriorityString } from '@ckeditor/ckeditor5-utils/src/priorities';
 
   export interface ConverterDefinition {
-    converterPriority: PriorityString;
+    converterPriority?: PriorityString;
     model: any;
-    upcastAlso: MatcherPattern | MatcherPattern[];
+    upcastAlso?: MatcherPattern | MatcherPattern[];
     view: ElementDefinition
   }
 
   interface AddRecursive {
-    add(): AddRecursive;
+    add(converter: (...args: any[]) => void): AddRecursive;
   }
 
   export default class Conversion {
@@ -83,6 +83,86 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/conversion' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/downcast-converters' {
+  import AttributeElement from '@ckeditor/ckeditor5-engine/src/view/attributeelement';
+  import UIElement from '@ckeditor/ckeditor5-engine/src/view/uielement';
+  import EventInfo from '@ckeditor/ckeditor5-utils/src/eventinfo';
+  import { PriorityString } from '@ckeditor/ckeditor5-utils/src/priorities';
+
+  export interface HighlightDescriptor {
+    attributes?: { [key: string]: string };
+    classes?: string | string[];
+    id?: string;
+    priority?: number;
+  }
+
+  export function changeAttribute(
+    attributeCreator: (value: any, data: any) => { key: string, value: any },
+  ): (evt: EventInfo, data: object, conversionApi: any) => void;
+
+  export function createViewElementFromHighlightDescriptor(descriptor: HighlightDescriptor): AttributeElement;
+
+
+  export function downcastAttributeToAttribute(config: {
+    model: string | {
+      key: string,
+      values: string[],
+      name?: string,
+    },
+    view: string | {
+      key: string,
+      value: any;
+    } | {
+      [key: string]: {
+        key: string,
+        value: any;
+      }
+    } | ((modelAttributeValue: any) => {
+      key: string,
+      value: any;
+    }),
+    converterPriority?: PriorityString,
+  }): () => void;
+
+  export function downcastAttributeToElement(config: {
+    model: any,
+    view: any,
+    converterPriority?: PriorityString,
+  }): () => void ;
+
+  export function downcastElementToElement(config: {
+    model,
+    view,
+  }): () => void ;
+
+  export function downcastMarkerToElement(config: {
+    model,
+    view,
+    converterPriority?,
+  }): () => void ;
+
+  export function downcastMarkerToHighlight(config: {
+    model,
+    view,
+    converterPriority?,
+  }): () => void ;
+
+  export function highlightElement(highlightDescriptor: HighlightDescriptor | (() => void)): () => void;
+
+  export function highlightText(highlightDescriptor: HighlightDescriptor | (() => void)): () => void;
+
+  export function insertElement(elementCreator: () => void): () => void;
+
+  export function insertText(): () => void;
+
+  export function insertUIElement(elementCreator: UIElement | (() => void)): () => void;
+
+  export function remove(): () => void;
+
+  export function removeHighlight(highlightDescriptor: HighlightDescriptor | (() => void)): () => void;
+
+  export function removeUIElement(): () => void;
+
+  export function wrap(elementCreator: () => void): () => void;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/downcast-selection-converters' {
@@ -1056,6 +1136,20 @@ declare module '@ckeditor/ckeditor5-engine/src/view/observer/selectionobserver' 
 /* view/observer: end */
 
 declare module '@ckeditor/ckeditor5-engine/src/view/attributeelement' {
+  import Element from '@ckeditor/ckeditor5-engine/src/view/element';
+
+  export default class AttributeElement extends Element {
+    static DEFAULT_PRIORITY: number;
+
+    readonly id: string | number;
+    readonly priority: number;
+
+    getElementsWithSameId(): Set<AttributeElement>;
+
+    getFillerOffset(): number;
+
+    isSimilar(otherElement: Element): boolean;
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/containerelement' {
