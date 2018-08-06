@@ -5,6 +5,7 @@
 // TypeScript Version: 2.3
 
 /* controller: start */
+
 declare module '@ckeditor/ckeditor5-engine/src/controller/datacontroller' {
   export class DataController {
   }
@@ -83,8 +84,12 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/conversion' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/downcast-converters' {
+  import Element from '@ckeditor/ckeditor5-engine/src/model/element';
   import AttributeElement from '@ckeditor/ckeditor5-engine/src/view/attributeelement';
+  import ContainerElement from '@ckeditor/ckeditor5-engine/src/view/containerelement';
+  import { ElementDefinition } from '@ckeditor/ckeditor5-engine/src/view/elementdefinition';
   import UIElement from '@ckeditor/ckeditor5-engine/src/view/uielement';
+  import Writer from '@ckeditor/ckeditor5-engine/src/view/writer';
   import EventInfo from '@ckeditor/ckeditor5-utils/src/eventinfo';
   import { PriorityString } from '@ckeditor/ckeditor5-utils/src/priorities';
 
@@ -130,8 +135,8 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/downcast-converters' {
   }): () => void ;
 
   export function downcastElementToElement(config: {
-    model,
-    view,
+    model: string,
+    view: ElementDefinition | ((modelElement: Element, viewWriter: Writer) => ContainerElement),
   }): () => void ;
 
   export function downcastMarkerToElement(config: {
@@ -186,6 +191,33 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/modelconsumable' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/upcast-converters' {
+  export function convertText(): () => void;
+
+  export function convertToModelFragment(): () => void;
+
+  export function upcastAttributeToAttribute(config: {
+    view,
+    model,
+    converterPriority?,
+  }): () => void;
+
+  export function upcastElementToAttribute(config: {
+    view,
+    model,
+    converterPriority?,
+  }): () => void;
+
+  export function upcastElementToElement(config: {
+    view,
+    model,
+    converterPriority?,
+  }): () => void;
+
+  export function upcastElementToMarker(config: {
+    view,
+    model,
+    converterPriority?,
+  }): () => void;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/upcast-selection-converters' {
@@ -1153,6 +1185,11 @@ declare module '@ckeditor/ckeditor5-engine/src/view/attributeelement' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/containerelement' {
+  import Element from '@ckeditor/ckeditor5-engine/src/view/element';
+
+  export default class ContainerElement extends Element {
+    getFillerOffset(): number;
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/document' {
@@ -1181,6 +1218,9 @@ declare module '@ckeditor/ckeditor5-engine/src/view/document' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/documentfragment' {
+  export default class ViewDocumentFragment {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/documentselection' {
@@ -1309,12 +1349,21 @@ declare module '@ckeditor/ckeditor5-engine/src/view/elementdefinition' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/emptyelement' {
+  export default class EmptyElement {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/filler' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/item' {
+  import Node from '@ckeditor/ckeditor5-engine/src/view/node';
+  import TextProxy from '@ckeditor/ckeditor5-engine/src/view/textproxy';
+
+  export type ViewItem =
+    Node
+    | TextProxy;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/matcher' {
@@ -1338,15 +1387,83 @@ declare module '@ckeditor/ckeditor5-engine/src/view/matcher' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/node' {
+  export default class ViewNode {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/placeholder' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/position' {
+  import ViewDocumentFragment from '@ckeditor/ckeditor5-engine/src/view/documentfragment';
+  import EditableElement from '@ckeditor/ckeditor5-engine/src/view/editableelement';
+  import { ViewItem } from '@ckeditor/ckeditor5-engine/src/view/item';
+  import ViewNode from '@ckeditor/ckeditor5-engine/src/view/node';
+  import ViewRange from '@ckeditor/ckeditor5-engine/src/view/range';
+  import { ViewTreeWalkerValue } from '@ckeditor/ckeditor5-engine/src/view/treewalker';
+
+  export type ViewPositionRelation =
+    'before'
+    | 'after'
+    | 'same'
+    | 'different'
+
+  export default class ViewPosition {
+    editableElement: EditableElement;
+    readonly isAtEnd: boolean;
+    readonly isAtStart: boolean;
+    readonly nodeAfter: ViewNode;
+    readonly nodeBefore: ViewNode;
+    readonly offset: number;
+    readonly parent: ViewNode | ViewDocumentFragment;
+    readonly root: ViewNode | ViewDocumentFragment;
+
+    static createAfter(item: ViewItem): ViewPosition;
+
+    static createAt(
+      itemOrPosition: ViewItem | ViewPosition,
+      offset?: number | 'end' | 'before' | 'after',
+    ): ViewPosition;
+
+    static createBefore(item: ViewItem): ViewPosition;
+
+    static createFromPosition(position: ViewPosition): ViewPosition;
+
+    constructor(parent: ViewNode | ViewDocumentFragment, offset: number);
+
+    compareWith(otherPosition: ViewPosition): ViewPositionRelation;
+
+    getAncestors(): any[];
+
+    getCommonAncestor(position: ViewPosition): ViewNode | ViewDocumentFragment;
+
+    getLastMatchingPosition(
+      skip: (value: ViewTreeWalkerValue) => boolean,
+      options?: {
+        boundaries?: ViewRange,
+        startPosition?: ViewPosition,
+        direction?: 'backward' | 'forward',
+        singleCharacters?: boolean,
+        shallow?: boolean,
+        ignoreElementEnd?: boolean,
+      },
+    ): ViewPosition;
+
+    getShiftedBy(shift: number): ViewPosition;
+
+    isAfter(otherPosition: ViewPosition): boolean;
+
+    isBefore(otherPosition: ViewPosition): boolean;
+
+    isEqual(otherPosition: ViewPosition): boolean;
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/range' {
+  export default class ViewRange {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/renderer' {
@@ -1360,6 +1477,9 @@ declare module '@ckeditor/ckeditor5-engine/src/view/rooteditableelement' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/selection' {
+  export default class Selection {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/text' {
@@ -1370,9 +1490,53 @@ declare module '@ckeditor/ckeditor5-engine/src/view/text' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/textproxy' {
+  export default class TextProxy {
+
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/treewalker' {
+  import { TreeWalkerValue } from '@ckeditor/ckeditor5-engine/src/model/treewalker';
+  import { ViewItem } from '@ckeditor/ckeditor5-engine/src/view/item';
+  import ViewPosition from '@ckeditor/ckeditor5-engine/src/view/position';
+  import ViewRange from '@ckeditor/ckeditor5-engine/src/view/range';
+
+  export type ViewTreeWalkerValueType =
+    'elementStart'
+    | 'elementEnd'
+    | 'text'
+
+  export interface ViewTreeWalkerValue {
+    item: ViewItem;
+    length: number;
+    nextPosition: ViewPosition;
+    previousPosition: ViewPosition;
+    type: ViewTreeWalkerValueType;
+  }
+
+  export default class ViewTreeWalker {
+    readonly boundaries: ViewRange;
+    readonly direction: 'backward' | 'forward';
+    readonly ignoreElementEnd: boolean;
+    readonly position: ViewPosition;
+    readonly shallow: boolean;
+    readonly singleCharacters: boolean;
+
+    constructor(options?: {
+      boundaries?: ViewRange,
+      startPosition?: ViewPosition,
+      direction?: 'backward' | 'forward',
+      singleCharacters?: boolean,
+      shallow?: boolean,
+      ignoreElementEnd?: boolean,
+    });
+
+    [Symbol.iterator](): Iterable<ViewTreeWalkerValue>;
+
+    next(): ViewTreeWalkerValue;
+
+    skip(skip: (value: TreeWalkerValue) => boolean): void;
+  }
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/uielement' {
@@ -1418,4 +1582,102 @@ declare module '@ckeditor/ckeditor5-engine/src/view/view' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/writer' {
+  import AttributeElement from '@ckeditor/ckeditor5-engine/src/view/attributeelement';
+  import ContainerElement from '@ckeditor/ckeditor5-engine/src/view/containerelement';
+  import Document from '@ckeditor/ckeditor5-engine/src/view/document';
+  import EditableElement from '@ckeditor/ckeditor5-engine/src/view/editableelement';
+  import Element from '@ckeditor/ckeditor5-engine/src/view/element';
+  import EmptyElement from '@ckeditor/ckeditor5-engine/src/view/emptyelement';
+  import { ViewItem } from '@ckeditor/ckeditor5-engine/src/view/item';
+  import ViewPosition from '@ckeditor/ckeditor5-engine/src/view/position';
+  import Range from '@ckeditor/ckeditor5-engine/src/view/range';
+  import Selection from '@ckeditor/ckeditor5-engine/src/view/selection';
+  import Text from '@ckeditor/ckeditor5-engine/src/view/text';
+  import UIElement from '@ckeditor/ckeditor5-engine/src/view/uielement';
+
+  export default class Writer {
+    readonly document: Document;
+
+    addClass(className: string | string[], element: Element): void;
+
+    breakAttributes(positionOrRange: ViewPosition | Range): ViewPosition | Range;
+
+    breakContainer(position: ViewPosition): ViewPosition;
+
+    clear(range: Range, element: Element): void;
+
+    createAttributeElement(
+      name: string,
+      attributes?: { [key: string]: any },
+      options?: { priority?: number, id?: number | string },
+    ): AttributeElement;
+
+    createContainerElement(name: string, attributes?: { [key: string]: any }): ContainerElement;
+
+    createEditableElement(name: string, attributes?: { [key: string]: any }): EditableElement;
+
+    createEmptyElement(name: string, attributes?: { [key: string]: any }): EmptyElement;
+
+    createText(data: string): Text;
+
+    createUIElement(
+      name: string,
+      attributes?: { [key: string]: any },
+      renderFunction?: (domDocument) => any,
+    ): UIElement;
+
+    insert(
+      position: ViewPosition,
+      nodes: Text | AttributeElement | ContainerElement | EmptyElement | UIElement | Iterable<Text | AttributeElement | ContainerElement | EmptyElement | UIElement>,
+    ): Range;
+
+    mergeAttributes(position: ViewPosition): ViewPosition;
+
+    mergeContainers(position: ViewPosition): ViewPosition;
+
+    move(sourceRange: Range, targetPosition: ViewPosition): Range;
+
+    remove(range: Range): DocumentFragment;
+
+    removeAttribute(key: string, element: Element): void;
+
+    removeClass(className: string | string[], element: Element): void;
+
+    removeCustomProperty(key: string | Symbol, element: Element): boolean;
+
+    removeStyle(property: string | string[], element: Element): void;
+
+    rename(viewElement: ContainerElement, newName: string): void;
+
+    setAttribute(key: string, value: string, element: Element): void;
+
+    setCustomProperty(key: string | Symbol, value: any, element: Element): void;
+
+    setSelection(
+      selectable: Selection | ViewPosition | Iterable<Range> | Range | ViewItem,
+      placeOrOffset?: number | 'before' | 'end' | 'after' | 'on' | 'in',
+      options?: {
+        backward?: boolean,
+        fake?: boolean,
+        label?: string,
+      },
+    ): void;
+
+    setSelectionFocus(itemOrPosition: ViewItem | ViewPosition, offset?: number | 'end' | 'before' | 'after'): void;
+
+    setStyle(
+      property: string,
+      value: string,
+      element: Element,
+    ): void;
+
+    setStyle(
+      property: { [key: string]: string },
+      element: Element,
+    ): void;
+
+    unwrap(range: Range, attribute: AttributeElement): void;
+
+    wrap(range: Range, attribute: AttributeElement): void;
+  }
 }
