@@ -41,6 +41,7 @@ import Notification from '@ckeditor/ckeditor5-ui/src/notification/notification';
 
 import { ChangeImage } from './insertimage/changeimage';
 import { InsertImage } from './insertimage/insertimage';
+import { Spoiler } from './spoiler/spoiler';
 
 
 export default class AcoreEditor extends (ClassicEditorBase as typeof Editor) {
@@ -67,6 +68,7 @@ AcoreEditor.builtinPlugins = [
 
   InsertImage,
   ChangeImage,
+  Spoiler,
 ];
 
 // Editor configuration.
@@ -80,6 +82,7 @@ AcoreEditor.defaultConfig = {
       'blockquote',
       '|',
       'insertImage',
+      'spoiler',
     ],
   },
   image: {
