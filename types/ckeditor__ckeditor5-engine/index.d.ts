@@ -135,7 +135,7 @@ declare namespace ckeditor {
 
       export function insertText(): () => void;
 
-      export function insertUIElement(elementCreator: view.UIElement | (() => void)): () => void;
+      export function insertUIElement(elementCreator: view.UIElement | ((data, writer) => view.Element)): () => void;
 
       export function remove(): () => void;
 
@@ -146,14 +146,70 @@ declare namespace ckeditor {
       export function wrap(elementCreator: () => void): () => void;
 
 
-      export class DowncastDispatcher {
+      export class DowncastDispatcher extends ckeditor.utils.EmitterMixin {
+        conversionApi: { [key: string]: any };
+
+        constructor(conversionApi?: { [key: string]: any });
+
+        convertAttribute(range: model.Range, key: string, oldValue: any, newValue: any, writer: view.Writer): void;
+
+        convertChanges(differ: model.Differ, writer: view.Writer): void;
+
+        convertInsert(range: model.Range, writer: view.Writer): void;
+
+        convertMarkerAdd(markerName: string, markerRange: model.Range, writer: view.Writer): void;
+
+        convertMarkerRemove(markerName: string, markerRange: model.Range, writer: view.Writer): void;
+
+        convertRemove(position: model.Position, length: number, name: string, writer: view.Writer): void;
+
+        convertSelection(selection: model.Selection, markers: model.Marker[], writer: view.Writer): void;
       }
 
-      export class Mapper {
+      export class Mapper extends ckeditor.utils.EmitterMixin {
+        constructor();
+
+        bindElementToMarker(element: view.Element, name: string): void;
+
+        bindElements(modelElement: model.Element, viewElement: view.Element): void;
+
+        clearBindings(): void;
+
+        getModelLength(viewNode: view.Element): number;
+
+        markerNameToElements(name: string): Set<view.Element>;
+
+        registerViewToModelLength(viewElementName: string, lengthCallback: (element: view.Element) => number): void;
+
+        toModelElement(viewElement: view.Element): model.Element;
+
+        toModelPosition(viewPosition: view.Position): model.Position;
+
+        toModelRange(viewRange: view.Range): model.Range;
+
+        toViewElement(modelElement: model.Element): view.Element;
+
+        toViewPosition(modelPosition: model.Position, options?: { isPhantom?: boolean }): view.Position;
+
+        toViewRange(modelRange: model.Range): view.Range;
+
+        unbindElementsFromMarkerName(name: string): void;
+
+        unbindModelElement(modelElement: model.Element): void;
+
+        unbindViewElement(viewElement: view.Element): void;
       }
 
       export class ModelConsumable {
+        constructor();
 
+        add(item: model.Item | model.Selection | model.Range, type: string): void;
+
+        consume(item: model.Item | model.Selection | model.Range, type: string): boolean;
+
+        revert(item: model.Item | model.Selection | model.Range, type: string): null | boolean;
+
+        test(item: model.Item | model.Selection | model.Range, type: string): null | boolean;
       }
 
       export function convertText(): () => void;
@@ -972,6 +1028,8 @@ declare namespace ckeditor {
         readonly isEmpty: boolean;
         readonly name: string;
 
+        constructor(name: string, attrs?: { [key: string]: any } | Iterable<any>, children?: Node | Iterable<Node>);
+
         findAncestor(patterns: { [key: string]: any } | string | RegExp | ((...args) => any)): Element;
 
         getAttribute(key: string): string;
@@ -1286,18 +1344,27 @@ declare namespace ckeditor {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/controller/datacontroller' {
-  export default ckeditor.engine.controller.DataController;
+  class DataController extends ckeditor.engine.controller.DataController {
+  }
+
+  export default DataController;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/controller/editingcontroller' {
-  export default ckeditor.engine.controller.EditingController;
+  class EditingController extends ckeditor.engine.controller.EditingController {
+  }
+
+  export default EditingController;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/conversion' {
   export interface ConverterDefinition extends ckeditor.engine.conversion.ConverterDefinition {
   }
 
-  export default ckeditor.engine.conversion.Conversion;
+  class Conversion extends ckeditor.engine.conversion.Conversion {
+  }
+
+  export default Conversion;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/downcast-converters' {
@@ -1326,11 +1393,17 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/downcast-selection-con
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/downcastdispatcher' {
-  export default ckeditor.engine.conversion.DowncastDispatcher;
+  class DowncastDispatcher extends ckeditor.engine.conversion.DowncastDispatcher {
+  }
+
+  export default DowncastDispatcher;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/mapper' {
-  export default ckeditor.engine.conversion.Mapper;
+  class Mapper extends ckeditor.engine.conversion.Mapper {
+  }
+
+  export default Mapper;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/modelconsumable' {
@@ -1392,7 +1465,10 @@ declare module '@ckeditor/ckeditor5-engine/src/model/delta/basic-transformations
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/delta/delta' {
-  export default ckeditor.engine.model.delta.Delta;
+  class Delta extends ckeditor.engine.model.delta.Delta {
+  }
+
+  export default Delta;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/delta/deltafactory' {
@@ -1450,7 +1526,10 @@ declare module '@ckeditor/ckeditor5-engine/src/model/operation/nooperation' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/operation/operation' {
-  export default ckeditor.engine.model.operation.Operation;
+  class Operation extends ckeditor.engine.model.operation.Operation {
+  }
+
+  export default Operation;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/operation/operationfactory' {
@@ -1490,31 +1569,52 @@ declare module '@ckeditor/ckeditor5-engine/src/model/utils/selection-post-fixer'
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/batch' {
-  export default ckeditor.engine.model.Batch;
+  class Batch extends ckeditor.engine.model.Batch {
+  }
+
+  export default Batch;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/differ' {
-  export default ckeditor.engine.model.Differ;
+  class Differ extends ckeditor.engine.model.Differ {
+  }
+
+  export default Differ;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/document' {
-  export default ckeditor.engine.model.Document;
+  class Document extends ckeditor.engine.model.Document {
+  }
+
+  export default Document;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/documentfragment' {
-  export default ckeditor.engine.model.DocumentFragment;
+  class DocumentFragment extends ckeditor.engine.model.DocumentFragment {
+  }
+
+  export default DocumentFragment;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/documentselection' {
-  export default ckeditor.engine.model.DocumentSelection;
+  class DocumentSelection extends ckeditor.engine.model.DocumentSelection {
+  }
+
+  export default DocumentSelection;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/element' {
-  export default ckeditor.engine.model.Element;
+  class Element extends ckeditor.engine.model.Element {
+  }
+
+  export default Element;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/history' {
-  export default ckeditor.engine.model.History;
+  class History extends ckeditor.engine.model.History {
+  }
+
+  export default History;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/item' {
@@ -1525,58 +1625,97 @@ declare module '@ckeditor/ckeditor5-engine/src/model/liveposition' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/liverange' {
-  export default ckeditor.engine.model.LiveRange;
+  class LiveRange extends ckeditor.engine.model.LiveRange {
+  }
+
+  export default LiveRange;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/markercollection' {
-  export default ckeditor.engine.model.MarkerCollection;
+  class MarkerCollection extends ckeditor.engine.model.MarkerCollection {
+  }
+
+  export default MarkerCollection;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/model' {
-  export default ckeditor.engine.model.Model;
+  class Model extends ckeditor.engine.model.Model {
+  }
+
+  export default Model;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/node' {
-  export default ckeditor.engine.model.Node;
+  class Node extends ckeditor.engine.model.Node {
+  }
+
+  export default Node;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/nodelist' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/position' {
-  export default ckeditor.engine.model.Position;
+  class Position extends ckeditor.engine.model.Position {
+  }
+
+  export default Position;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/range' {
-  export default ckeditor.engine.model.Range;
+  class Range extends ckeditor.engine.model.Range {
+  }
+
+  export default Range;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/rootelement' {
-  export default ckeditor.engine.model.RootElement;
+  class RootElement extends ckeditor.engine.model.RootElement {
+  }
+
+  export default RootElement;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/schema' {
-  export default ckeditor.engine.model.Schema;
+  class Schema extends ckeditor.engine.model.Schema {
+  }
+
+  export default Schema;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/selection' {
-  export default ckeditor.engine.model.Selection;
+  class Selection extends ckeditor.engine.model.Selection {
+  }
+
+  export default Selection;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/text' {
-  export default ckeditor.engine.model.Text;
+  class Text extends ckeditor.engine.model.Text {
+  }
+
+  export default Text;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/textproxy' {
-  export default ckeditor.engine.model.TextProxy;
+  class TextProxy extends ckeditor.engine.model.TextProxy {
+  }
+
+  export default TextProxy;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/treewalker' {
-  export default ckeditor.engine.model.TreeWalker;
+  class TreeWalker extends ckeditor.engine.model.TreeWalker {
+  }
+
+  export default TreeWalker;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/model/writer' {
-  export default ckeditor.engine.model.Writer;
+  class Writer extends ckeditor.engine.model.Writer {
+  }
+
+  export default Writer;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/utils/bindtwostepcarettoattribute' {
@@ -1610,42 +1749,69 @@ declare module '@ckeditor/ckeditor5-engine/src/view/observer/mutationobserver' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/observer/observer' {
-  export default ckeditor.engine.view.observer.Observer;
+  class Observer extends ckeditor.engine.view.observer.Observer {
+  }
+
+  export default Observer;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/observer/selectionobserver' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/attributeelement' {
-  export default ckeditor.engine.view.AttributeElement;
+  class AttributeElement extends ckeditor.engine.view.AttributeElement {
+  }
+
+  export default AttributeElement;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/containerelement' {
-  export default ckeditor.engine.view.ContainerElement;
+  class ContainerElement extends ckeditor.engine.view.ContainerElement {
+  }
+
+  export default ContainerElement;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/document' {
-  export default ckeditor.engine.view.Document;
+  class Document extends ckeditor.engine.view.Document {
+  }
+
+  export default Document;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/documentfragment' {
-  export default ckeditor.engine.view.DocumentFragment;
+  class DocumentFragment extends ckeditor.engine.view.DocumentFragment {
+  }
+
+  export default DocumentFragment;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/documentselection' {
-  export default ckeditor.engine.view.DocumentSelection;
+  class DocumentSelection extends ckeditor.engine.view.DocumentSelection {
+  }
+
+  export default DocumentSelection;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/domconverter' {
-  export default ckeditor.engine.view.DomConverter;
+  class DomConverter extends ckeditor.engine.view.DomConverter {
+  }
+
+  export default DomConverter;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/editableelement' {
-  export default ckeditor.engine.view.EditableElement;
+  class EditableElement extends ckeditor.engine.view.EditableElement {
+  }
+
+  export default EditableElement;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/element' {
-  export default ckeditor.engine.view.Element;
+  class Element extends ckeditor.engine.view.Element {
+  }
+
+  export default Element;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/elementdefinition' {
@@ -1653,7 +1819,10 @@ declare module '@ckeditor/ckeditor5-engine/src/view/elementdefinition' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/emptyelement' {
-  export default ckeditor.engine.view.EmptyElement;
+  class EmptyElement extends ckeditor.engine.view.EmptyElement {
+  }
+
+  export default EmptyElement;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/filler' {
@@ -1668,51 +1837,84 @@ declare module '@ckeditor/ckeditor5-engine/src/view/matcher' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/node' {
-  export default ckeditor.engine.view.Node;
+  class Node extends ckeditor.engine.view.Node {
+  }
+
+  export default Node;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/placeholder' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/position' {
-  export default ckeditor.engine.view.Position;
+  class Position extends ckeditor.engine.view.Position {
+  }
+
+  export default Position;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/range' {
-  export default ckeditor.engine.view.Range;
+  class Range extends ckeditor.engine.view.Range {
+  }
+
+  export default Range;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/renderer' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/rooteditableelement' {
-  export default ckeditor.engine.view.RootEditableElement;
+  class RootEditableElement extends ckeditor.engine.view.RootEditableElement {
+  }
+
+  export default RootEditableElement;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/selection' {
-  export default ckeditor.engine.view.Selection;
+  class Selection extends ckeditor.engine.view.Selection {
+  }
+
+  export default Selection;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/text' {
-  export default ckeditor.engine.view.Text;
+  class Text extends ckeditor.engine.view.Text {
+  }
+
+  export default Text;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/textproxy' {
-  export default ckeditor.engine.view.TextProxy;
+  class TextProxy extends ckeditor.engine.view.TextProxy {
+  }
+
+  export default TextProxy;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/treewalker' {
-  export default ckeditor.engine.view.TreeWalker;
+  class TreeWalker extends ckeditor.engine.view.TreeWalker {
+  }
+
+  export default TreeWalker;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/uielement' {
-  export default ckeditor.engine.view.UIElement;
+  class UIElement extends ckeditor.engine.view.UIElement {
+  }
+
+  export default UIElement;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/view' {
-  export default ckeditor.engine.view.View;
+  class View extends ckeditor.engine.view.View {
+  }
+
+  export default View;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/writer' {
-  export default ckeditor.engine.view.Writer;
+  class Writer extends ckeditor.engine.view.Writer {
+  }
+
+  export default Writer;
 }

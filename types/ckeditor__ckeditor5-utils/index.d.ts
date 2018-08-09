@@ -83,7 +83,7 @@ declare namespace ckeditor {
 
       on(
         event: string,
-        callback: () => void,
+        callback: (eventInfo: EventInfo, ...args) => void,
         options?: { priority: PriorityString | number },
       ): void;
 
