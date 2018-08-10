@@ -49,6 +49,12 @@ export class SpoilerCommand extends Command {
     return true;
   }
 
+  /*private _applySpoiler(writer: Writer, blocks: Element[]) {
+    const spoiler = writer.createElement('spoiler');
+
+    this.editor.model.insertContent(spoiler, this.editor.model.document.selection);
+  }*/
+
   private _applySpoiler(writer: Writer, blocks: Element[]) {
     const spoilersToMerge = [];
 

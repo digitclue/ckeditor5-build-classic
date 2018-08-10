@@ -282,6 +282,14 @@ declare namespace ckeditor {
       export class Batch {
       }
 
+      export interface DiffItem {
+        type: string;
+        position: Position;
+        name: string;
+        length: number;
+        changeCount: number;
+      }
+
       export class Differ {
         readonly isEmpty: boolean;
 
@@ -296,7 +304,7 @@ declare namespace ckeditor {
 
         bufferOperation(operation: model.operation.Operation): void;
 
-        getChanges(options: { includeChangesInGraveyard?: boolean }): object[];
+        getChanges(options?: { includeChangesInGraveyard?: boolean }): DiffItem[];
 
         getMarkersToAdd(): object[];
 
@@ -326,12 +334,40 @@ declare namespace ckeditor {
 
         getRootNames(): string[];
 
-        registerPostFixer(postFixer: (...args: any[]) => any): void;
+        registerPostFixer(postFixer: (writer: Writer) => boolean): void;
 
         toJSON(): object;
       }
 
       export class DocumentFragment {
+        readonly childCount: number;
+        readonly isEmpty: boolean;
+        readonly markers: Map<string, Range>;
+        readonly maxOffset: number;
+        readonly parent: null;
+        readonly root: DocumentFragment;
+
+        static fromJSON(json: { [key: string]: any }): DocumentFragment;
+
+        [Symbol.iterator](): Iterable<Node>;
+
+        getChild(index: number): Node;
+
+        getChildIndex(node: Node): number;
+
+        getChildStartOffset(node: Node): number;
+
+        getChildren(): Iterable<Node>;
+
+        getNodeByPath(relativePath): Node | DocumentFragment;
+
+        getPath(): number[];
+
+        is(type: string): boolean;
+
+        offsetToIndex(offset: number): number;
+
+        toJSON(): { [key: string]: any };
       }
 
       export class DocumentSelection {
@@ -1020,7 +1056,7 @@ declare namespace ckeditor {
         ): any;
       }
 
-      export class EditableElement {
+      export class EditableElement extends ContainerElement {
       }
 
       export class Element extends Node {
@@ -1111,6 +1147,15 @@ declare namespace ckeditor {
         readonly nextSibling: Node;
         readonly parent: Element | DocumentFragment;
       }
+
+      export function attachPlaceholder(
+        view: View,
+        element: Element,
+        placeholderText: string,
+        checkFunction?: () => boolean,
+      ): void;
+
+      export function detachPlaceholder(view: View, element: Element): void;
 
       export class Position {
         editableElement: EditableElement;
@@ -1407,6 +1452,10 @@ declare module '@ckeditor/ckeditor5-engine/src/conversion/mapper' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/modelconsumable' {
+  class ModelConsumable extends ckeditor.engine.conversion.ModelConsumable {
+  }
+
+  export default ModelConsumable;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/conversion/upcast-converters' {
@@ -1844,6 +1893,8 @@ declare module '@ckeditor/ckeditor5-engine/src/view/node' {
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/placeholder' {
+  export const attachPlaceholder: typeof ckeditor.engine.view.attachPlaceholder;
+  export const detachPlaceholder: typeof ckeditor.engine.view.attachPlaceholder;
 }
 
 declare module '@ckeditor/ckeditor5-engine/src/view/position' {
