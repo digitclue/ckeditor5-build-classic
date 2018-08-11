@@ -1,28 +1,22 @@
 import { EditorWithUI } from '@ckeditor/ckeditor5-core/src/editor/editorwithui';
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import DowncastDispatcher from '@ckeditor/ckeditor5-engine/src/conversion/downcastdispatcher';
-import Mapper from '@ckeditor/ckeditor5-engine/src/conversion/mapper';
-import ModelConsumable from '@ckeditor/ckeditor5-engine/src/conversion/modelconsumable';
+import { downcastElementToElement } from '@ckeditor/ckeditor5-engine/src/conversion/downcast-converters';
 import { upcastElementToElement } from '@ckeditor/ckeditor5-engine/src/conversion/upcast-converters';
-import DocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment';
 import ModelElement from '@ckeditor/ckeditor5-engine/src/model/element';
-import Node from '@ckeditor/ckeditor5-engine/src/model/node';
 import Range from '@ckeditor/ckeditor5-engine/src/model/range';
-import EditableElement from '@ckeditor/ckeditor5-engine/src/view/editableelement';
-import ViewElement from '@ckeditor/ckeditor5-engine/src/view/element';
-import ViewPosition from '@ckeditor/ckeditor5-engine/src/view/position';
-import Writer from '@ckeditor/ckeditor5-engine/src/view/writer';
-import EventInfo from '@ckeditor/ckeditor5-utils/src/eventinfo';
+import { attachPlaceholder } from '@ckeditor/ckeditor5-engine/src/view/placeholder';
+import {
+  toWidget,
+  toWidgetEditable,
+} from '@ckeditor/ckeditor5-widget/src/utils';
 import { SpoilerCommand } from './spoiler-command';
 import {
+  createSpoilerContentViewElement,
+  createSpoilerHeaderViewElement,
+  createSpoilerViewElement,
   getSpoilerChild,
-  insertSpoiler,
-  insertSpoilerContent,
-  insertSpoilerHeader,
   isSpoilerContent,
   isSpoilerHeader,
-  spoilerContentElementCreator,
-  spoilerHeaderElementCreator,
 } from './utils';
 
 export class SpoilerEditing extends Plugin<EditorWithUI> {
@@ -31,11 +25,10 @@ export class SpoilerEditing extends Plugin<EditorWithUI> {
     const {
       conversion,
       commands,
-      editing,
+      model,
     } = editor;
-    const { schema } = editor.model;
+    const { schema } = model;
     const {
-      mapper,
       view,
     } = editor.editing;
 
@@ -44,7 +37,7 @@ export class SpoilerEditing extends Plugin<EditorWithUI> {
     schema.register('spoiler', {
       allowWhere: '$block',
       allowContentOf: '$root',
-      isObject: true,
+      // isObject: true,
     });
 
     schema.register('spoilerHeader', {
@@ -60,8 +53,19 @@ export class SpoilerEditing extends Plugin<EditorWithUI> {
       isObject: true,
     });
 
+    editor.conversion.elementToElement({ model: 'spoiler', view: { name: 'div', classes: 'acore-spoiler' } });
+    editor.conversion.elementToElement({
+      model: 'spoilerContent',
+      view: { name: 'div', classes: 'acore-spoiler__content' },
+    });
+
+    editor.model.change((writer) => {
+      const changes = model.document.differ.getChanges();
+
+      console.log([...changes]);
+    });
+
     editor.model.document.registerPostFixer(writer => {
-      const model = this.editor.model;
       const changes = model.document.differ.getChanges();
       let hasChanges = false;
 
@@ -87,20 +91,17 @@ export class SpoilerEditing extends Plugin<EditorWithUI> {
     });
 
     editor.model.document.registerPostFixer(writer => {
-      const model = this.editor.model;
       const changes = model.document.differ.getChanges();
       let hasChanges = false;
 
       for (const entry of changes) {
         if (entry.type == 'insert' && entry.name == 'spoiler') {
           const spoiler = entry.position.nodeAfter as ModelElement;
-          const content = [...spoiler.getChildren()]
-            .filter((node: ModelElement) => !isSpoilerHeader(node) && !isSpoilerContent(node))
-            .map(node => Range.createOn(node));
+          const spoilerContent = getSpoilerChild(spoiler, 'spoilerContent');
 
-          if (content.length) {
-            writer.move(Range.createFromRanges(content), getSpoilerChild(spoiler, 'spoilerContent'));
-          }
+          Array.from(spoiler.getChildren())
+            .filter((node: ModelElement) => !isSpoilerHeader(node) && !isSpoilerContent(node))
+            .forEach((node) => writer.insert(node, spoilerContent));
         }
       }
 
@@ -109,43 +110,80 @@ export class SpoilerEditing extends Plugin<EditorWithUI> {
 
     conversion
       .for('editingDowncast')
-      .add((dispatcher: DowncastDispatcher) => {
-        dispatcher
-          .on('insert:spoiler', insertSpoiler());
-      })
-      .add((dispatcher: DowncastDispatcher) => {
-        const createSpoilerHeaderForEditing = spoilerHeaderElementCreator(view);
-        dispatcher
-          .on('insert:spoilerHeader', insertSpoilerHeader(createSpoilerHeaderForEditing));
-      })
-      .add((dispatcher: DowncastDispatcher) => {
-        const createSpoilerContentForEditing = spoilerContentElementCreator(view);
-        dispatcher
-          .on('insert:spoilerContent', insertSpoilerContent(createSpoilerContentForEditing));
-      });
+      //   .add(downcastElementToElement({
+      //     model: 'spoiler',
+      //     view: (modelElement, viewWriter) => createSpoilerViewElement(viewWriter),
+      //   }));
+      .add(downcastElementToElement({
+        model: 'spoilerHeader',
+        view: (
+          modelElement,
+          viewWriter,
+        ) => {
+          const viewElement = createSpoilerHeaderViewElement(viewWriter);
+
+          attachPlaceholder(view, viewElement, editor.t('Spoiler'));
+
+          return toWidgetEditable(viewElement, viewWriter);
+        },
+      }));
+    // .add(downcastElementToElement({
+    //   model: 'spoilerContent',
+    //   view: (
+    //     modelElement,
+    //     viewWriter,
+    //   ) => {
+    //     const viewElement = createSpoilerContentViewElement(viewWriter);
+    //
+    //     // attachPlaceholder(view, viewElement, editor.t('Spoiler'));
+    //     return viewElement;
+    //     return toWidgetEditable(viewElement, viewWriter);
+    //   },
+    // }));
+
+    conversion
+      .for('dataDowncast')
+      //   .add(downcastElementToElement({
+      //     model: 'spoiler',
+      //     view: (modelElement, viewWriter) => createSpoilerViewElement(viewWriter),
+      //   }));
+      .add(downcastElementToElement({
+        model: 'spoilerHeader',
+        view: (
+          modelElement,
+          viewWriter,
+        ) => createSpoilerHeaderViewElement(viewWriter),
+      }));
+    // .add(downcastElementToElement({
+    //   model: 'spoilerContent',
+    //   view: (
+    //     modelElement,
+    //     viewWriter,
+    //   ) => createSpoilerContentViewElement(viewWriter),
+    // }));
 
     conversion
       .for('upcast')
-      .add(upcastElementToElement({
-        model: 'spoiler',
-        view: {
-          name: 'div',
-          classes: 'acore-spoiler',
-        },
-      }))
+      //   .add(upcastElementToElement({
+      //     model: 'spoiler',
+      //     view: {
+      //       name: 'div',
+      //       classes: 'acore-spoiler',
+      //     },
+      //   }));
       .add(upcastElementToElement({
         model: 'spoilerHeader',
         view: {
           name: 'div',
           classes: 'acore-spoiler__header',
         },
-      }))
-      .add(upcastElementToElement({
-        model: 'spoilerContent',
-        view: {
-          name: 'div',
-          classes: 'acore-spoiler__content',
-        },
       }));
+    // .add(upcastElementToElement({
+    //   model: 'spoilerContent',
+    //   view: {
+    //     name: 'div',
+    //     classes: 'acore-spoiler__content',
+    //   },
+    // }));
   }
 }

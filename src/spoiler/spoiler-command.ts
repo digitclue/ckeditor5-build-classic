@@ -4,10 +4,17 @@ import Position from '@ckeditor/ckeditor5-engine/src/model/position';
 import Range from '@ckeditor/ckeditor5-engine/src/model/range';
 import Writer from '@ckeditor/ckeditor5-engine/src/model/writer';
 import first from '@ckeditor/ckeditor5-utils/src/first';
+import { checkCanBeSpoilered } from './utils';
 
 const findSpoiler = (elementOrPosition: Element | Position): Element => {
-  if (elementOrPosition.parent instanceof Element) {
-    return elementOrPosition.parent.name == 'spoiler' ? elementOrPosition.parent : null;
+  let parent = elementOrPosition.parent;
+
+  while (parent instanceof Element) {
+    if (parent.name === 'spoiler') {
+      return parent;
+    }
+
+    parent = parent.parent;
   }
 
   return null;
@@ -29,10 +36,15 @@ export class SpoilerCommand extends Command {
     } = model;
     const blocks = Array.from(document.selection.getSelectedBlocks());
 
-    console.log('insert spoiler', blocks);
-
     model.change((writer) => {
-      this._applySpoiler(writer, blocks);
+      if (this.value) {
+        this._removeSpoiler(writer, blocks.filter(findSpoiler));
+      } else {
+        const blocksToSpoiler = blocks
+          .filter(block => findSpoiler(block) || checkCanBeSpoilered(schema, block));
+
+        this._applySpoiler(writer, blocksToSpoiler);
+      }
     });
 
     // const blocksToSpoiler =
@@ -40,13 +52,27 @@ export class SpoilerCommand extends Command {
 
   private _getValue(): boolean {
     const firstBlock = first(this.editor.model.document.selection.getSelectedBlocks());
+    console.log(firstBlock);
 
     // In the current implementation, the block quote must be an immediate parent of a block element.
     return !!(firstBlock && findSpoiler(firstBlock));
   }
 
   private _checkEnabled(): boolean {
-    return true;
+    if (this.value) {
+      return true;
+    }
+
+    const selection = this.editor.model.document.selection;
+    const schema = this.editor.model.schema;
+
+    const firstBlock = first(selection.getSelectedBlocks());
+
+    if (!firstBlock) {
+      return false;
+    }
+
+    return checkCanBeSpoilered(schema, firstBlock);
   }
 
   /*private _applySpoiler(writer: Writer, blocks: Element[]) {
@@ -87,6 +113,41 @@ export class SpoilerCommand extends Command {
         }
 
         return nextQuote;
+      });
+  }
+
+  private _removeSpoiler(writer, blocks) {
+    // Unquote all groups of block. Iterate in the reverse order to not break following ranges.
+    getRangesOfBlockGroups(blocks)
+      .reverse()
+      .forEach(groupRange => {
+        const spoiler = findSpoiler(groupRange.start);
+        if (groupRange.start.isAtStart && groupRange.end.isAtEnd) {
+          writer.unwrap(spoiler);
+
+          return;
+        }
+
+        // The group of blocks are at the beginning of an <bQ> so let's move them left (out of the <bQ>).
+        if (groupRange.start.isAtStart) {
+          const positionBefore = Position.createBefore(groupRange.start.parent);
+
+          writer.move(groupRange, positionBefore);
+
+          return;
+        }
+
+        // The blocks are in the middle of an <bQ> so we need to split the <bQ> after the last block
+        // so we move the items there.
+        if (!groupRange.end.isAtEnd) {
+          writer.split(groupRange.end);
+        }
+
+        // Now we are sure that groupRange.end.isAtEnd is true, so let's move the blocks right.
+
+        const positionAfter = Position.createAfter(groupRange.end.parent);
+
+        writer.move(groupRange, positionAfter);
       });
   }
 }

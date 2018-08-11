@@ -1268,7 +1268,10 @@ declare namespace ckeditor {
         | 'elementEnd'
         | 'text';
 
-      export class UIElement {
+      export class UIElement extends Element {
+        render(domDocument: any): HTMLElement;
+
+        toDomElement(domDocument: any): HTMLElement;
       }
 
       export class View extends ckeditor.utils.ObservableMixin {

@@ -1,3 +1,29 @@
 .acore-spoiler {
-  background: chartreuse;
+  margin-bottom: 1em;
+}
+
+.acore-spoiler__header,
+.acore-spoiler__content {
+  padding: 4px 7px;
+  border: 1px solid var(--ck-color-toolbar-border);
+}
+
+.acore-spoiler__header {
+  background: var(--ck-color-toolbar-background);
+  border-radius: var(--ck-border-radius);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.acore-spoiler__content {
+  border-top-color: transparent;
+}
+
+.ck .acore-spoiler__header,
+.ck .acore-spoiler__content {
+  border-color: var(--ck-color-toolbar-border);
+}
+
+.ck .acore-spoiler__content {
+  border-top-color: transparent;
 }
