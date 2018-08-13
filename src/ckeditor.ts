@@ -36,6 +36,8 @@ import Link from '@ckeditor/ckeditor5-link/src/link';
 import List from '@ckeditor/ckeditor5-list/src/list';
 // @ts-ignore
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+// @ts-ignore
+import MediaEmbed from '@ckeditor/ckeditor5-media-embed/src/mediaembed';
 
 import Notification from '@ckeditor/ckeditor5-ui/src/notification/notification';
 
@@ -65,6 +67,7 @@ AcoreEditor.builtinPlugins = [
   List,
   Paragraph,
   Notification,
+  MediaEmbed,
 
   InsertImage,
   ChangeImage,
@@ -80,6 +83,8 @@ AcoreEditor.defaultConfig = {
       'underline',
       '|',
       'blockquote',
+      '|',
+      'insertMedia',
       '|',
       'insertImage',
       'spoiler',

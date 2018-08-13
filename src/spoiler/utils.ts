@@ -17,7 +17,7 @@ export const isSpoilerHeader = (modelElement: ModelElement | DocumentFragment): 
 export const isSpoilerContent = (modelElement: ModelElement | DocumentFragment): boolean => modelElement instanceof ModelElement && modelElement.name == 'spoilerContent';
 
 export const createSpoilerViewElement = (writer: Writer) => {
-  const spoilerView = writer.createEditableElement('blockquote', { class: 'acore-spoiler' });
+  const spoilerView = writer.createEditableElement('div', { class: 'acore-spoiler' });
 
   writer.setCustomProperty(spoilerSymbol, true, spoilerView);
 
@@ -27,6 +27,7 @@ export const createSpoilerViewElement = (writer: Writer) => {
 export const createSpoilerHeaderViewElement = (writer: Writer) => {
   const headerView = writer.createEditableElement('div', {
     class: ['acore-spoiler__header'],
+    onclick: 'var a= this.nextElementSibling.classList;var b = \'ck-hidden\'; a[a.contains(b) ? \'remove\' : \'add\'](b);'
   });
 
   writer.setCustomProperty(spoilerHeaderSymbol, true, headerView);
@@ -35,7 +36,7 @@ export const createSpoilerHeaderViewElement = (writer: Writer) => {
 };
 
 export const createSpoilerContentViewElement = (writer: Writer) => {
-  const contentView = writer.createEditableElement('div', {
+  const contentView = writer.createContainerElement('div', {
     class: 'acore-spoiler__content',
   });
 

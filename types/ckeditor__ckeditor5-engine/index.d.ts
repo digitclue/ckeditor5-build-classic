@@ -416,6 +416,12 @@ declare namespace ckeditor {
 
         static fromJSON(json: object): Element;
 
+        constructor(
+          name: string,
+          attrs?: { [key: string]: any } | Iterable<any>,
+          children?: Node | Iterable<Node>,
+        );
+
         getChild(index: number): Node;
 
         getChildIndex(node: Node): number;
@@ -1146,6 +1152,26 @@ declare namespace ckeditor {
         readonly index: number;
         readonly nextSibling: Node;
         readonly parent: Element | DocumentFragment;
+        readonly previousSibling: Node;
+        readonly root: Node | DocumentFragment;
+
+        constructor();
+
+        getAncestors(options?: { includeSelf?: boolean, parentFirst?: boolean }): any[];
+
+        getCommonAncestor(node, options?: { includeSelf?: boolean }): Element | DocumentFragment;
+
+        getPath(): number[];
+
+        is(type: string): boolean;
+
+        isAfter(node: Node): boolean;
+
+        isBefore(node: Node): boolean;
+
+        isSimilar(otherElement: Element): boolean;
+
+        toJSON(): { [key: string]: any }
       }
 
       export function attachPlaceholder(
@@ -1214,7 +1240,33 @@ declare namespace ckeditor {
         | 'different';
 
       export class Range {
+        readonly end: Position;
+        isCollapsed: boolean;
+        isFlat: boolean;
+        root: Element | DocumentFragment;
+        start: Position;
 
+        static createCollapsedAt(itemOrPosition: Item | Position, offset?: number | 'end' | 'before' | 'after'): Range;
+
+        static createFromParentsAndOffsets(
+          startElement: Node | DocumentFragment,
+          startOffset: number,
+          endElement: Node | DocumentFragment,
+          endOffset: number,
+        ): Range;
+
+        static createFromPositionAndShift(position: Position, shift: number): Range;
+
+        static createFromRange(range: Range): Range;
+
+        static createIn(element: Element): Range;
+
+        static createOn(item: Item): Range;
+
+        constructor(start: Position, end?: Position);
+        [Symbol.iterator]: Iterable<TreeWalkerValue>;
+        containsPosition(position: Position): boolean;
+        containsRange(otherRange: Range, loose?: boolean): boolean;
       }
 
       export class RootEditableElement {
@@ -1224,7 +1276,12 @@ declare namespace ckeditor {
 
       }
 
-      export class Text {
+      export class Text extends Node {
+        data: string;
+
+        constructor(data: string);
+
+
       }
 
       export class TextProxy {
